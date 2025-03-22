@@ -1,4 +1,23 @@
+import { useEffect, useState } from "react";
+
 export const TrainStation = () => {
+  const [parcel, setParcel] = useState([]);
+
+  useEffect(() => {
+    fetchParcel();
+  }, []);
+
+  const fetchParcel = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/abc");
+      const data = await response.json(); // Convert response to JSON
+      setParcel(data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+
   return (
     <div>
       <h3 className="h3">Station</h3>
@@ -16,6 +35,32 @@ export const TrainStation = () => {
       <table class="table">
         <thead>
           <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Type</th>
+            <th scope="col">Weight</th>
+            <th scope="col">Ishazerdous</th>
+            <th scope="col">isbreakable</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+            { parcel && parcel.map((values)=>(
+              <tr>
+              <th>{values.ID}</th>
+              <th>{values.type}</th>
+              <th>{values.Weight}</th>
+              <th>{values.Ishazerdous}</th>
+              <th>{values.isbreakable}</th>
+              </tr>
+            ))}
+
+            
+        </tbody>
+      </table>
+
+      <table class="table">
+        <thead>
+          <tr>
             <th scope="col">No</th>
             <th scope="col">Station Name</th>
             <th scope="col">Station Master Name</th>
@@ -27,14 +72,14 @@ export const TrainStation = () => {
           <tr>
             <th scope="row">1</th>
             <td>Fort</td>
-            <td>Supun Prabath</td>
+            <td>Can Yaman</td>
             <td>011-3070447</td>
             <td>Colombo 10, Slave island</td>
           </tr>
           <tr>
             <th scope="row">2</th>
             <td>Colombo 10</td>
-            <td>Can Yaman</td>
+            <td>Sosh Prasanga</td>
             <td>011-2695722</td>
             <td>Fort, Dematagoda, Base line</td>
           </tr>
@@ -47,6 +92,7 @@ export const TrainStation = () => {
           </tr>
         </tbody>
       </table>
+
       <input class="btn btn-primary" type="submit" value="Add New"></input>
     </div>
   );
