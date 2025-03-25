@@ -2,8 +2,11 @@ import React from "react";
 
 export const GoodRetreve = () => {
   return (
-    <div>
-      <div class="w-50 m-3">
+    <div class="w-50 m-3">
+      <div>
+        <h4 class="mb-4">Good Retrever</h4>
+      </div>
+      <div>
         <div class="mb-3">
           <label for="exampleFormControlInput1" class="form-label">
             Name
