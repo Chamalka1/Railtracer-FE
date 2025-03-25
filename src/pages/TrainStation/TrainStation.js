@@ -17,7 +17,6 @@ export const TrainStation = () => {
     }
   };
 
-
   return (
     <div>
       <h3 className="h3">Station</h3>
@@ -32,31 +31,6 @@ export const TrainStation = () => {
           Search
         </button>
       </form>
-      <table class="table">
-        <thead>
-          <tr>
-            <th scope="col">ID</th>
-            <th scope="col">Type</th>
-            <th scope="col">Weight</th>
-            <th scope="col">Ishazerdous</th>
-            <th scope="col">isbreakable</th>
-          </tr>
-        </thead>
-        <tbody>
-          
-            { parcel && parcel.map((values)=>(
-              <tr>
-              <th>{values.ID}</th>
-              <th>{values.type}</th>
-              <th>{values.Weight}</th>
-              <th>{values.Ishazerdous}</th>
-              <th>{values.isbreakable}</th>
-              </tr>
-            ))}
-
-            
-        </tbody>
-      </table>
 
       <table class="table">
         <thead>
@@ -93,7 +67,26 @@ export const TrainStation = () => {
         </tbody>
       </table>
 
-      <input class="btn btn-primary" type="submit" value="Add New"></input>
+      <input
+        class="btn btn-primary w-20"
+        type="submit"
+        value="Add New"
+        style={{ marginRight: "10px", width: "120px" }}
+      ></input>
+
+      <input
+        class="btn btn-primary w-20"
+        type="submit"
+        value="Edit"
+        style={{ marginRight: "10px", width: "120px" }}
+      ></input>
+
+      <input
+        class="btn btn-primary w-20"
+        type="submit"
+        value="Delete"
+        style={{ marginRight: "10px", width: "120px" }}
+      ></input>
     </div>
   );
 };
