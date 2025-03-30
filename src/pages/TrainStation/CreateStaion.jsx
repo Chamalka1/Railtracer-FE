@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getStations, addStation } from "../../services/stationApi";
+import { getStations, addStation } from "../services/stationApi";
 import { Link } from "react-router-dom";
 
 export const CreateStation = () => {

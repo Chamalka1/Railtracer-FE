@@ -6,12 +6,12 @@ import { AdminLog } from "./pages/Admin/AdminLog";
 import { TrainStation } from "./pages/TrainStation/TrainStation";
 import { Train } from "./pages/Train/Train";
 import { GoodRetreve } from "./pages/GoodRetrever/GoodRetreve";
-import { Csupport } from "./pages/CustomerSupport/Csupport";
+import { Csupport } from "./pages/CustomerSupport/customerSupport";
 import { Complain } from "./pages/Complain/complain";
 import { NavBar } from "./pages/components/NavBar";
 import { ErrorNotFound } from "./pages/components/ErrorNotFound";
 import { Package } from "./pages/Package/Package";
-import { CreateStation } from "./pages/TrainStation/CreateStation";
+import { CreateStation } from "./pages/TrainStation/CreateStaion";
 
 function App() {
   return (

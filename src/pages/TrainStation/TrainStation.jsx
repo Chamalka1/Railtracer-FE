@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getStations } from "../../services/stationApi";
+import { getStations } from "../services/stationApi";
 import { Link } from "react-router-dom";
 
 export const TrainStation = () => {
