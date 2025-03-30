@@ -7,14 +7,14 @@ export const Train = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   return (
-    <div class="w-50 mt-20">
+    <div className="w-50 mt-20">
       <h2>Search Tain</h2>
 
-      <div class="input-group mb-3">
-        <label class="input-group-text" for="inputGroupSelect01">
+      <div className="input-group mb-3">
+        <label className="input-group-text" htmlFor="inputGroupSelect01">
           From
         </label>
-        <select class="form-select " id="inputGroupSelect01">
+        <select className="form-select " id="inputGroupSelect01">
           <option selected>Choose...</option>
           <option value="1">Fort</option>
           <option value="2">Maradana</option>
@@ -22,23 +22,27 @@ export const Train = () => {
         </select>
       </div>
 
-      <div class="input-group mb-3">
-        <label class="input-group-text" for="inputGroupSelect01">
+      <div className="input-group mb-3">
+        <label className="input-group-text" htmlFor="inputGroupSelect01">
           To
         </label>
-        <select class="form-select " id="inputGroupSelect01">
-          <option selected>Choose...</option>
+        <select
+          className="form-select "
+          id="inputGroupSelect01"
+          defaultValue={"Choose.."}
+        >
+          <option>Choose...</option>
           <option value="1">Fort</option>
           <option value="2">Maradana</option>
           <option value="3">Moratuwa</option>
         </select>
       </div>
 
-      <div class="input-group mb-3">
-        <label class="input-group-text" for="inputGroupSelect01">
+      <div className="input-group mb-3">
+        <label className="input-group-text" htmlFor="inputGroupSelect01">
           Start Time
         </label>
-        <select class="form-select " id="inputGroupSelect01">
+        <select className="form-select " id="inputGroupSelect01">
           <option selected>Choose...</option>
           <option value="1">00.00.00</option>
           <option value="2">00.30.00</option>
@@ -46,7 +50,6 @@ export const Train = () => {
           <option value="4">01.30.00</option>
           <option value="5">02.00.00</option>
           <option value="3">02.30.00</option>
-          
         </select>
       </div>
 
