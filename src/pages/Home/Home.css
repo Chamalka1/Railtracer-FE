@@ -1,0 +1,11 @@
+.carousel-inner{
+    color: rgb(3, 47, 83);
+    }
+    .carousel-item {
+        position: relative;
+        height: 435px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        margin-top: 150px; /* Adjust this value to increase space at the top */
+    }
