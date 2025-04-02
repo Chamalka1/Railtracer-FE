@@ -26,8 +26,6 @@ export const LogiAdmin = () => {
                 {/* Shipment Overview */}
                 <div style={{ background: "white", padding: "15px", marginBottom: "15px", borderRadius: "5px" }}>
                     <h2 style={{ margin: 0 }}>Shipment Overview</h2>
-                    <p>Total Shipments: 120</p>
-                    <p>Pending Deliveries: 35</p>
                 </div>
                 
                 {/* Track Parcel */}
