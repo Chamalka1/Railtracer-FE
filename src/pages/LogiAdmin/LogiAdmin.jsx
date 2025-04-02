@@ -2,6 +2,7 @@ import { useState } from "react";
 
 export const LogiAdmin = () => {
     const [searchResult, setSearchResult] = useState(null);
+    const [message, setMessage] = useState("");
     const username = "John Doe"; // Replace with dynamic username if available
 
     const handleSearch = () => {
@@ -11,7 +12,15 @@ export const LogiAdmin = () => {
         }, 1000);
     };
 
+    const handleAction = (action) => {
+        if (window.confirm(`Are you sure you want to ${action} this item?`)) {
+            setMessage(`${action} action completed successfully!`);
+            setTimeout(() => setMessage(""), 3000); // Clear message after 3 seconds
+        }
+    };
+
     return (
+
         <div style={{ fontFamily: "Arial, sans-serif", margin: 0, padding: 0, backgroundColor: "#f4f4f4" }}>
             {/* Header */}
             <div style={{ background: "#333", color: "white", padding: "15px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -42,12 +51,15 @@ export const LogiAdmin = () => {
                     
                     {/* Action Buttons */}
                     <div style={{ marginTop: "10px" }}>
-                        <button disabled={!searchResult} style={{ padding: "8px", marginRight: "5px", background: searchResult ? "blue" : "gray", color: "white", border: "none", cursor: searchResult ? "pointer" : "not-allowed" }}>Add</button>
-                        <button disabled={!searchResult} style={{ padding: "8px", marginRight: "5px", background: searchResult ? "green" : "gray", color: "white", border: "none", cursor: searchResult ? "pointer" : "not-allowed" }}>Modify</button>
-                        <button disabled={!searchResult} style={{ padding: "8px", background: searchResult ? "red" : "gray", color: "white", border: "none", cursor: searchResult ? "pointer" : "not-allowed" }}>Delete</button>
+                        <button onClick={() => handleAction("Add")} disabled={!searchResult} style={{ padding: "8px", marginRight: "5px", background: searchResult ? "blue" : "gray", color: "white", border: "none", cursor: searchResult ? "pointer" : "not-allowed" }}>Add</button>
+                        <button onClick={() => handleAction("Modify")} disabled={!searchResult} style={{ padding: "8px", marginRight: "5px", background: searchResult ? "green" : "gray", color: "white", border: "none", cursor: searchResult ? "pointer" : "not-allowed" }}>Modify</button>
+                        <button onClick={() => handleAction("Delete")} disabled={!searchResult} style={{ padding: "8px", background: searchResult ? "red" : "gray", color: "white", border: "none", cursor: searchResult ? "pointer" : "not-allowed" }}>Delete</button>
                     </div>
+
+                    {message && <p style={{ marginTop: "10px", color: "blue" }}>{message}</p>}
                 </div>
             </div>
         </div>
+        
     );
 };
