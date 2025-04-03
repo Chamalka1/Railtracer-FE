@@ -1,0 +1,124 @@
+/* Whparcelsort.css */
+
+/* Container */
+.container {
+    margin-top: 40px;
+    padding: 20px;
+  }
+  
+  /* Add New Parcel Button */
+  .btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #004085;
+  }
+  
+  /* Table Styles */
+  .table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+    background-color: #ffffff;
+  }
+  
+  .table th, .table td {
+    padding: 12px;
+    text-align: center;
+    border: 1px solid #ddd;
+  }
+  
+  .table th {
+    background-color: #f8f9fa;
+    color: #495057;
+  }
+  
+  .table-striped tbody tr:nth-of-type(odd) {
+    background-color: #f9f9f9;
+  }
+  
+  .table-bordered {
+    border: 1px solid #ddd;
+  }
+  
+  /* Form Elements */
+  .form-control {
+    width: 100%;
+    padding: 8px;
+    margin: 4px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .form-select {
+    width: 100%;
+    padding: 8px;
+    margin: 4px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  /* Action Buttons */
+  .btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  
+  .btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  
+  .btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+  }
+  
+  .btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+  }
+  
+  .ml-2 {
+    margin-left: 10px;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .table th, .table td {
+      padding: 8px;
+    }
+  
+    .btn-primary, .btn-success, .btn-danger {
+      font-size: 14px;
+      padding: 6px 12px;
+    }
+  
+    .form-control, .form-select {
+      padding: 6px;
+    }
+  }
+  
