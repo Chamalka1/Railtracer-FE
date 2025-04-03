@@ -2,6 +2,7 @@ import { useState } from "react";
 
 export const Details = () => {
     const username = "John Doe";
+    let TrackingId = "RT0001";
 
 
     return (
@@ -23,38 +24,45 @@ export const Details = () => {
 
         </div>
 
+
+ <div>
+    <h1>Tracking Id : {TrackingId}</h1>
+ </div>
+
         <div>
         <table class="table table-hover">
   <thead>
     <tr>
       <th scope="col">#</th>
-      <th scope="col">First</th>
-      <th scope="col">Last</th>
-      <th scope="col">Handle</th>
+      <th scope="col">##</th>
+
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th scope="row">1</th>
+      <th scope="row">Name</th>
       <td>Mark</td>
-      <td>Otto</td>
-      <td>@mdo</td>
+
     </tr>
     <tr>
-      <th scope="row">2</th>
+      <th scope="row">Destination Address</th>
       <td>Jacob</td>
-      <td>Thornton</td>
-      <td>@fat</td>
     </tr>
     <tr>
-      <th scope="row">3</th>
+      <th scope="row">Accepted Station </th>
       <td colspan="2">Larry the Bird</td>
-      <td>@twitter</td>
+    </tr>
+    <tr>
+      <th scope="row">Destination Station </th>
+      <td colspan="2">Larry the Bird</td>
     </tr>
   </tbody>
 </table>
+
+
         </div>
         
+        <button type="button" class="btn btn-primary">Add Damage details</button>
 
         
         </>
