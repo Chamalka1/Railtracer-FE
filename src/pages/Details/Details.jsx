@@ -50,11 +50,16 @@ export const Details = () => {
     </tr>
     <tr>
       <th scope="row">Accepted Station </th>
-      <td colspan="2">Larry the Bird</td>
+      <td colspan="2">Seeduwa</td>
     </tr>
     <tr>
       <th scope="row">Destination Station </th>
-      <td colspan="2">Larry the Bird</td>
+      <td colspan="2">Panadura</td>
+    </tr>
+
+    <tr>
+      <th scope="row">Details of the damage </th>
+      <td colspan="2">Handle is missing</td>
     </tr>
   </tbody>
 </table>

@@ -42,7 +42,7 @@ export const LogiAdmin = () => {
             <div style={{ padding: "20px" }}>
                 {/* Shipment Overview */}
                 <div style={{ background: "white", padding: "15px", marginBottom: "15px", borderRadius: "5px" }}>
-                    <h2 style={{ margin: 0 }}>Shipment Overview</h2>
+                    <h2 style={{ margin: 0 }}>Package Overview</h2>
                 </div>
                 
                 {/* Track Parcel */}
@@ -56,11 +56,6 @@ export const LogiAdmin = () => {
                         Search
                     </button>
                     {searchResult && <p style={{ marginTop: "10px", color: "green" }}>{searchResult}</p>}
-                    
-                    {/* Action Buttons */}
-                    <div style={{ marginTop: "10px" }}>
-                        <button onClick={() => handleAction("Modify")} disabled={!searchResult} style={{ padding: "8px", marginRight: "5px", background: searchResult ? "green" : "gray", color: "white", border: "none", cursor: searchResult ? "pointer" : "not-allowed" }}>Get Details</button>
-                    </div>
 
                     {message && <p style={{ marginTop: "10px", color: "blue" }}>{message}</p>}
                 </div>
