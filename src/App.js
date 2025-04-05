@@ -7,7 +7,7 @@ import WarehouseDashboard from './pages/WarehouseDashboard/WarehouseDashboard';
 import  Whparcelsort from './pages/Whparcelsort/Whparcelsort';
 import ReportGeneration from './pages/ReportsGeneration/ReportsGeneration';
 import ReportsGeneration from './pages/ReportsGeneration/ReportsGeneration';
-import WhComplains from './pages/WhComplains/WhComplains';
+
 
 
 function App() {
@@ -20,7 +20,7 @@ function App() {
     <Route path='/WarehouseDashboard' element={<WarehouseDashboard/>} />
     <Route path='/Whparcelsort' element={<Whparcelsort/>} />
     <Route path='/ReportsGeneration' element={<ReportsGeneration/>} />
-    <Route path='/WhComplains' element={<WhComplains/>} />
+    
     
     
 
