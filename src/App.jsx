@@ -12,6 +12,8 @@ import { NavBar } from "./pages/components/NavBar";
 import { ErrorNotFound } from "./pages/components/ErrorNotFound";
 import { Package } from "./pages/Package/Package";
 import { CreateStation } from "./pages/TrainStation/CreateStaion";
+import { CreatePackage } from "./pages/Package/CreatePackage";
+
 
 function App() {
   return (
@@ -30,6 +32,7 @@ function App() {
             <Route path="/csupport" element={<Csupport />} />
             <Route path="/complains" element={<Complain />} />
             <Route path="/packages" element={<Package />} />
+            <Route path="/packages/new" element={<CreatePackage />} />
             <Route path="*" element={<ErrorNotFound />} />
           </Routes>
         </div>
