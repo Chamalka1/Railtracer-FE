@@ -16,6 +16,7 @@ export const Whparcelsort = () => {
             <th>Train Schedule</th>
             <th>Priority</th>
             <th>Parcel Status</th>
+            <th>Parcel Size</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -45,6 +46,14 @@ export const Whparcelsort = () => {
                 <option value="Pending">Pending</option>
                 <option value="In Transit">In Transit</option>
                 <option value="Dispatched">Dispatched</option>
+              </select>
+            </td>
+
+            <td>
+              <select className="form-select">
+                <option value="Small">Small</option>
+                <option value="Medium">Medium</option>
+                <option value="Large">Large</option>
               </select>
             </td>
 

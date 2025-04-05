@@ -1,7 +1,7 @@
 import React from 'react';
 import './ReportsGeneration.css'; 
 
-const ReportPage = () => {
+const ReportsGeneration = () => {
   return (
     <div className="report-page">
       <h1>Parcel Sorting Report</h1>
@@ -14,9 +14,7 @@ const ReportPage = () => {
           <input type="date" id="dateTo" name="to" />
         </div>
         
-        <div className="filter-item">
-          <button className="generate-btn">Generate Report</button>
-        </div>
+        
       </div>
 
       {/* Report Table */}
@@ -65,13 +63,13 @@ const ReportPage = () => {
       </div>
 
       {/* Action Buttons */}
-      <div className="actions">
-        <button className="export-btn">Export to PDF</button>
-        {/* More export buttons as needed */}
+      <div className="filter-item">
+          <button className="generate-btn">Generate Report</button>
+        </div>
       </div>
-    </div>
+    
   );
 };
 
-export default ReportPage;
+export default ReportsGeneration;
 
