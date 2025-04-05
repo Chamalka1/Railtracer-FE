@@ -2,11 +2,13 @@ import { useState } from "react";
 
 export const DamageUpdate = () => {
     const username = "John Doe";
+    let TrackingId = "RT0001";
 
 
     return (
 
-        <><div style={{ background: "#333", color: "white", padding: "15px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <>
+        <div style={{ background: "#333", color: "white", padding: "15px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ fontSize: "24px" }}>Logistics Manager Dashboard - Damage Update</div>
 
             <div>
@@ -24,14 +26,62 @@ export const DamageUpdate = () => {
         </div>
         
         <div>
-                <ul class="list-group">
-                    <li class="list-group-item">An item</li>
-                    <li class="list-group-item">A second item</li>
-                    <li class="list-group-item">A third item</li>
-                    <li class="list-group-item">A fourth item</li>
-                    <li class="list-group-item">And a fifth one</li>
-                </ul>
-            </div></>
+    <h1>Tracking Id : {TrackingId}</h1>
+ </div>
+
+        <div>
+        <table class="table table-hover">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">##</th>
+
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th scope="row">Name</th>
+      <td>Mark</td>
+
+    </tr>
+    <tr>
+      <th scope="row">Destination Address</th>
+      <td>Jacob</td>
+    </tr>
+    <tr>
+      <th scope="row">Accepted Station </th>
+      <td colspan="2">Larry the Bird</td>
+    </tr>
+    <tr>
+      <th scope="row">Destination Station </th>
+      <td colspan="2">Larry the Bird</td>
+    </tr>
+  </tbody>
+</table>
+
+<div>
+
+<input type="text" name="your_textbox" placeholder="Enter the Damage details here"/>
+
+</div>
+
+
+
+
+        </div>
+
+        <div>
+
+                    
+        <button type="button" class="btn btn-primary">Add</button>
+        <button type="button" class="btn btn-primary"> Update</button>
+        <button type="button" class="btn btn-primary"> Delete</button>
+
+        </div>
+
+            
+            
+            </>
        
     );
 };

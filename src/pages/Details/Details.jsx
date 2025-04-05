@@ -62,7 +62,7 @@ export const Details = () => {
 
         </div>
         
-        <button type="button" class="btn btn-primary">Add Damage details</button>
+        <button type="button" class="btn btn-primary">Damage details</button>
 
         
         </>
