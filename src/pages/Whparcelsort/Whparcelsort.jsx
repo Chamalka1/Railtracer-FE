@@ -1,5 +1,5 @@
 import React from "react";
-//import "./Whparcelsort.css";
+import "./Whparcelsort.css";
 
 export const Whparcelsort = () => {
   return (
