@@ -51,7 +51,7 @@ const ReportsGeneration = () => {
         </table>
       </div>
 
-      {/* Action Buttons */}
+      
       <div className="filter-item">
       <input class="btn btn-primary" type="button" value="Submit"></input>
         </div>
