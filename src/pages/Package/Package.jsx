@@ -3,11 +3,12 @@ import { getPackages, getPackage } from "../services/packageApi";
 import { Link } from "react-router-dom";
 
 export const Package = () => {
-  const [stations, setPackage] = useState([]);
+  const [packages, setPackage] = useState([]);
 
   useEffect(() => {
     getPackages().then((data) => {
       setPackage(data.response);
+      console.log(data);
     });
   }, []);
 
@@ -30,8 +31,8 @@ export const Package = () => {
         <thead>
           <tr>
             <th scope="col">NO</th>
-            <th scope="col">Sender Address</th>
-            <th scope="col">diliver Adress</th>
+            <th scope="col">From</th>
+            <th scope="col">To</th>
             <th scope="col">weight</th>
             <th scope="col">Cost</th>
             <th scope="col">Telephon No</th>
@@ -39,33 +40,17 @@ export const Package = () => {
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <th scope="row">1</th>
-            <td>Mark</td>
-            <td>Otto</td>
-            <td>@mdo</td>
-            <td>Mark</td>
-            <td>Otto</td>
-            <td>@mdo</td>
-          </tr>
-          <tr>
-            <th scope="row">2</th>
-            <td>Jacob</td>
-            <td>Thornton</td>
-            <td>@fat</td>
-            <td>Jacob</td>
-            <td>Thornton</td>
-            <td>@fat</td>
-          </tr>
-          <tr>
-            <th scope="row">3</th>
-            <td>John</td>
-            <td>Doe</td>
-            <td>@social</td>
-            <td>John</td>
-            <td>Doe</td>
-            <td>@social</td>
-          </tr>
+          {packages.map((package_, index) => (
+            <tr key={index}>
+              <th scope="row">{index + 1}</th>
+              <td>{package_.from.stationName}</td>
+              <td>{package_.to.stationName}</td>
+              <td>{package_.weight}</td>
+              <td>{150}</td>
+              <td>{package_.deliverySender.telephone}</td>
+              <td>{package_.deliverySender.email}</td>
+            </tr>
+          ))}
         </tbody>
       </table>
 
