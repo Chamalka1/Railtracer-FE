@@ -3,7 +3,6 @@ import { getStations } from "../services/stationApi";
 import { Link } from "react-router-dom";
 
 export const TrainStation = () => {
-
   const [stations, setStations] = useState([]);
 
   useEffect(() => {

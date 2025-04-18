@@ -8,6 +8,9 @@ export const NavBar = () => {
     { name: "Trains", ref: "/trains" },
     { name: "Stations", ref: "/stations" },
     { name: "Complains", ref: "/complains" },
+    { name: "Customers", ref: "/customers" },
+    { name: "Warehouses", ref: "/warehouses" },
+    { name: "Logistics", ref: "/ogistics" },
   ];
   return (
     <nav className="navbar navbar-expand-lg bg-body-tertiary">
