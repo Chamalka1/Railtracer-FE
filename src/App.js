@@ -5,7 +5,6 @@ import { Home } from './pages/Home/Home';
 import { Login } from './pages/Authentication/Login/Login';
 import WarehouseDashboard from './pages/WarehouseDashboard/WarehouseDashboard';
 import  Whparcelsort from './pages/Whparcelsort/Whparcelsort';
-import ReportGeneration from './pages/ReportsGeneration/ReportsGeneration';
 import ReportsGeneration from './pages/ReportsGeneration/ReportsGeneration';
 
 
