@@ -23,30 +23,30 @@ const ReportsGeneration = () => {
   const [reportList, setReportList] = useState([]);
   const [formErrors, setFormErrors] = useState({});
 
-  // Fetch Reports - Defined the function getReports
+ 
   const getReports = async () => {
     try {
-      // Replace the URL with your backend API endpoint that fetches the reports
+      
       const response = await axios.get('http://localhost:5000/api/reports');
-      return response.data; // Return the data fetched from API
+      return response.data; 
     } catch (error) {
       console.error('Error fetching reports:', error);
-      return []; // Return an empty array in case of an error
+      return [];
     }
   };
 
-  // Fetch reports when component mounts
+  
   const fetchReports = async () => {
     try {
       const reports = await getReports();
-      setReportList(reports); // Update the report list state with fetched reports
+      setReportList(reports); 
     } catch (error) {
       console.error('Error fetching reports:', error);
     }
   };
 
   useEffect(() => {
-    fetchReports(); // Fetch reports when component loads
+    fetchReports(); 
   }, []);
 
   const handleInputChange = (e) => {
@@ -104,7 +104,7 @@ const ReportsGeneration = () => {
         remarks: ''
       });
       setPreviewData(null);
-      fetchReports(); // Refresh the report list
+      fetchReports(); // 
     } catch (error) {
       console.error('Error submitting report:', error);
       alert('Submission failed!');
@@ -118,10 +118,10 @@ const ReportsGeneration = () => {
       alert('Please fix validation errors before previewing.');
       return;
     }
-    setPreviewData(formData); // Set the form data for preview
+    setPreviewData(formData); 
   };
 
-  // Function to generate PDF (defined the generatePDF function)
+  
   const generatePDF = (data) => {
     const doc = new jsPDF();
     doc.text('Warehouse Daily Log Report', 10, 10);
@@ -132,14 +132,47 @@ const ReportsGeneration = () => {
       y += 10;
     });
 
-    doc.save('report.pdf'); // Save the generated PDF
+    doc.save('report.pdf'); 
   };
 
   const handleGeneratePDF = () => {
     if (previewData) {
-      generatePDF(previewData); // Generate PDF from preview data
+      generatePDF(previewData); 
     } else {
       alert('Preview data not available!');
+    }
+  };
+  const handleNotifyManager = async () => {
+    if (!previewData) {
+      alert('Please preview the report before notifying.');
+      return;
+    }
+  
+    try {
+      const doc = new jsPDF();
+      doc.text('Warehouse Daily Log Report', 10, 10);
+      let y = 20;
+  
+      Object.entries(previewData).forEach(([key, value]) => {
+        doc.text(`${key}: ${value}`, 10, y);
+        y += 10;
+      });
+  
+      const pdfBlob = doc.output('blob');
+      const formData = new FormData();
+      formData.append('pdf', pdfBlob, 'report.pdf');
+  
+      // Make POST request to send the email
+      await axios.post('http://localhost:5000/api/reports/email', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+  
+      alert('Email sent to logistics manager!');
+    } catch (error) {
+      console.error('Error sending email:', error);
+      alert('Failed to send email.');
     }
   };
 
@@ -312,56 +345,76 @@ const ReportsGeneration = () => {
           <button type="button" className="btn btn-danger" onClick={handleGeneratePDF}>
             Export as PDF
           </button>
+          <button type="button" className="btn btn-warning" onClick={handleNotifyManager}>
+             Notify Logistics Manager
+          </button>
         </div>
       </form>
 
       {previewData && (
-        <div className="mt-5">
-          <h4>Preview</h4>
-          <table className="table table-bordered">
-            <tbody>
-              {Object.entries(previewData).map(([key, value]) => (
-                <tr key={key}>
-                  <th>{key}</th>
-                  <td>{value || 'N/A'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="card mt-4">
+          <div className="card-header">
+            <h5 className="mb-0">Preview Report</h5>
+          </div>
+          <div className="card-body">
+            <p><strong>Report Date:</strong> {previewData.reportDate}</p>
+            <p><strong>Warehouse Name:</strong> {previewData.warehouseName}</p>
+            <p><strong>Station Name:</strong> {previewData.stationName}</p>
+            <p><strong>Submitted By:</strong> {previewData.submittedBy}</p>
+            <p><strong>Arrived:</strong> {previewData.arrived}</p>
+            <p><strong>Dispatched:</strong> {previewData.dispatched}</p>
+            <p><strong>Sorted:</strong> {previewData.sorted}</p>
+            <p><strong>Damaged:</strong> {previewData.damaged}</p>
+            <p><strong>Unsorted:</strong> {previewData.unsorted}</p>
+            <p><strong>Arrived Time:</strong> {previewData.arrivedTime}</p>
+            <p><strong>Dispatched Time:</strong> {previewData.dispatchedTime}</p>
+            <p><strong>Remarks:</strong> {previewData.remarks}</p>
+          </div>
         </div>
       )}
 
-      <h4 className="mt-5">Previous Reports</h4>
-      <table className="table table-striped">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Warehouse</th>
-            <th>Station</th>
-            <th>Arrived</th>
-            <th>Dispatched</th>
-            <th>Sorted</th>
-            <th>Damaged</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {reportList.map((report) => (
-            <tr key={report._id}>
-              <td>{report.reportDate}</td>
-              <td>{report.warehouseName}</td>
-              <td>{report.stationName}</td>
-              <td>{report.arrived}</td>
-              <td>{report.dispatched}</td>
-              <td>{report.sorted}</td>
-              <td>{report.damaged}</td>
-              <td>
-                {/* You can add action buttons like view/edit/delete */}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {/* Report List Table */}
+      <div className="mt-5">
+        <h4 className="mb-3 text-center">Submitted Reports</h4>
+        <div className="table-responsive">
+          <table className="table table-bordered table-hover">
+            <thead className="table-light">
+              <tr>
+                <th>Date</th>
+                <th>Warehouse</th>
+                <th>Station</th>
+                <th>Submitted By</th>
+                <th>Arrived</th>
+                <th>Dispatched</th>
+                <th>Sorted</th>
+                <th>Damaged</th>
+                <th>Remarks</th>
+              </tr>
+            </thead>
+            <tbody>
+              {reportList.length > 0 ? (
+                reportList.map((report, index) => (
+                  <tr key={index}>
+                    <td>{report.reportDate}</td>
+                    <td>{report.warehouseName}</td>
+                    <td>{report.stationName}</td>
+                    <td>{report.submittedBy}</td>
+                    <td>{report.arrived}</td>
+                    <td>{report.dispatched}</td>
+                    <td>{report.sorted}</td>
+                    <td>{report.damaged}</td>
+                    <td>{report.remarks}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="9" className="text-center">No reports found.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };

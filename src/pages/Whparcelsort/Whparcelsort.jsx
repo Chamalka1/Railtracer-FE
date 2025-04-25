@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './Whparcelsort.css';
 import axios from 'axios';
-import { NavBar } from '../components/navbar';
+
 
 const statusOptions = ['Pending', 'Dispatched', 'In Transit'];
 const sizeOptions = ['S', 'M', 'L'];
@@ -83,6 +83,7 @@ const Whparcelsort = () => {
   return (
     
     <div className="container mt-4">
+      
       <h4 className="mb-3">Warehouse Parcel Log</h4>
 
       <div className="input-group mb-3">
