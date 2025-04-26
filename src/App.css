@@ -1,5 +1,6 @@
 .App {
   text-align: center;
+  padding-top: 56px; /* Height of the navbar */
 }
 
 .App-logo {
@@ -35,5 +36,54 @@
 
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* Navbar styles */
+.navbar {
+  background-color: #1a1a1a !important;
+}
+
+.navbar-brand {
+  font-size: 1.4rem;
+}
+
+.nav-link {
+  position: relative;
+  padding: 0.5rem 1rem !important;
+}
+
+.nav-link.active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 1rem;
+  right: 1rem;
+  height: 2px;
+  background-color: var(--bs-primary);
+}
+
+.nav-link:hover {
+  color: var(--bs-primary) !important;
+}
+
+/* Add margin to main content when user is logged in */
+.logged-in-content {
+  margin-top: 2rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991.98px) {
+  .navbar-collapse {
+    padding: 1rem 0;
+  }
+
+  .navbar-nav {
+    margin-bottom: 1rem;
+  }
+
+  .d-flex.align-items-center {
+    flex-direction: column;
+    gap: 1rem;
   }
 }
