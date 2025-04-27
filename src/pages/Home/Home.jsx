@@ -24,7 +24,7 @@ export const Home = () => {
           <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-50"></div>
         </div>
         <div className="position-absolute top-50 start-50 translate-middle text-center text-light w-75">
-          <h1 className="display-3 fw-bold mb-4">Railway Management System</h1>
+          <h1 className="display-3 fw-bold mb-4">Railway Parcel Management System</h1>
           <p className="lead fs-4 mb-4">
             Revolutionizing railway operations with cutting-edge technology and
             seamless integration
@@ -127,21 +127,21 @@ export const Home = () => {
                   <div className="contact-item">
                     <i className="bi bi-envelope-fill text-primary display-6 mb-3"></i>
                     <h4 className="h5">Email Us</h4>
-                    <p className="mb-0">support@railwaymgmt.com</p>
+                    <p className="mb-0">support@railtracer.com</p>
                   </div>
                 </div>
                 <div className="col-md-4">
                   <div className="contact-item">
                     <i className="bi bi-telephone-fill text-primary display-6 mb-3"></i>
                     <h4 className="h5">Call Us</h4>
-                    <p className="mb-0">+1 (555) 123-4567</p>
+                    <p className="mb-0">+77 123 4567</p>
                   </div>
                 </div>
                 <div className="col-md-4">
                   <div className="contact-item">
                     <i className="bi bi-geo-alt-fill text-primary display-6 mb-3"></i>
                     <h4 className="h5">Visit Us</h4>
-                    <p className="mb-0">123 Railway Street, City</p>
+                    <p className="mb-0">123 Railway Street, Sri lanka</p>
                   </div>
                 </div>
               </div>

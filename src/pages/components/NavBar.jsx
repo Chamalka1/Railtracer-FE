@@ -1,4 +1,4 @@
-import React from "react";
+import React , {useEffect} from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 
 export const NavBar = () => {
@@ -11,6 +11,10 @@ export const NavBar = () => {
     localStorage.removeItem("user");
     navigate("/login");
   };
+
+  useEffect(() => {
+    getMenuItems()
+  }, [user]);
 
   const getMenuItems = () => {
     if (!user) return [];
@@ -59,7 +63,7 @@ export const NavBar = () => {
       <div className="container">
         <Link className="navbar-brand fw-bold" to="/">
           <i className="bi bi-train-front me-2"></i>
-          Railway Management
+          Railtracer
         </Link>
         <button
           className="navbar-toggler"
