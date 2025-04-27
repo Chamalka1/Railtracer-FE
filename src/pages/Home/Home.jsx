@@ -1,4 +1,4 @@
-import React from "react";
+import React,{useEffect} from "react";
 import { useNavigate } from "react-router-dom";
 import "./Home.css";
 import first from '../../Assets/firstslide.jpg'
@@ -6,6 +6,9 @@ import first from '../../Assets/firstslide.jpg'
 export const Home = () => {
   const user = JSON.parse(localStorage.getItem("user") || "null");
   const navigate = useNavigate();
+  useEffect(() => {
+    localStorage.clear()
+  }, []);
 
   const LandingPage = () => (
     <div className="landing-page">
@@ -296,6 +299,7 @@ export const Home = () => {
         description: "Handle customer inquiries and manage support tickets.",
         actions: [
           { label: "Support Dashboard", path: "/csupport" },
+          { label: "Packages", path: "/packages" },
           { label: "Manage Complaints", path: "/complains" },
         ],
       },

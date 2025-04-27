@@ -14,6 +14,7 @@ import { Package } from "./pages/Package/Package";
 import { CreateStation } from "./pages/TrainStation/CreateStaion";
 import UserManagement from "./components/UserManagement";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
+import ParcelManagement from "./components/ParcelManagement";
 
 // Protected Route component
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
@@ -33,7 +34,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
 function App() {
   const user = JSON.parse(localStorage.getItem("user") || "null");
-
+  console.log(user)
   return (
     <div className="App">
       <BrowserRouter>
@@ -119,8 +120,8 @@ function App() {
             <Route
               path="/packages"
               element={
-                <ProtectedRoute>
-                  <Package />
+                <ProtectedRoute allowedRoles={["customerSupport"]}>
+                  <ParcelManagement />
                 </ProtectedRoute>
               }
             />

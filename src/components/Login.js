@@ -32,9 +32,9 @@ const Login = () => {
         response.data.user.role === "admin" ||
         response.data.user.role === "railwayAdmin"
       ) {
-        navigate("/admin/dashboard");
-      } else {
-        navigate("/dashboard");
+        navigate("/admin");
+      } else if(response.data.user.role==="customerSupport") {
+        navigate("/csupport");
       }
     } catch (error) {
       setError(error.response?.data?.message || "Login failed");

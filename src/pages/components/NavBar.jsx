@@ -37,6 +37,7 @@ export const NavBar = () => {
       case "customerSupportStaff":
         menuItems.push(
           { path: "/csupport", label: "Support Dashboard" },
+          { path: "/packages", label: "packages" },
           { path: "/complains", label: "Complaints" }
         );
         break;

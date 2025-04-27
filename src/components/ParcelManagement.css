@@ -1,0 +1,27 @@
+/* Print styles */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  
+  .modal-content * {
+    visibility: hidden;
+  }
+
+  .barcode-container,
+  .barcode-container * {
+    visibility: visible;
+  }
+
+  .barcode-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    text-align: center;
+  }
+
+  .btn-primary {
+    display: none;
+  }
+} 
