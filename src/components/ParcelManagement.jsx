@@ -20,6 +20,9 @@ const ParcelManagement = () => {
     destinationStation: "",
   });
 
+  const [formErrors, setFormErrors] = useState({});
+  const [touched, setTouched] = useState({});
+
   const [parcels, setParcels] = useState([]);
   const [stations, setStations] = useState([]);
   const [showTracking, setShowTracking] = useState(false);
@@ -66,17 +69,103 @@ const ParcelManagement = () => {
     }
   };
 
+  const validateForm = (data) => {
+    const errors = {};
+
+    // Customer Name validation
+    if (!data.customerName.trim()) {
+      errors.customerName = "Customer name is required";
+    } else if (data.customerName.length < 3) {
+      errors.customerName = "Customer name must be at least 3 characters";
+    }
+
+    // Phone validation
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!data.customerPhone) {
+      errors.customerPhone = "Phone number is required";
+    } else if (!phoneRegex.test(data.customerPhone)) {
+      errors.customerPhone = "Please enter a valid 10-digit phone number";
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!data.customerEmail) {
+      errors.customerEmail = "Email is required";
+    } else if (!emailRegex.test(data.customerEmail)) {
+      errors.customerEmail = "Please enter a valid email address";
+    }
+
+    // Weight validation
+    if (!data.weight) {
+      errors.weight = "Weight is required";
+    } else if (parseFloat(data.weight) <= 0) {
+      errors.weight = "Weight must be greater than 0";
+    }
+
+    // Dimensions validation (optional but must be positive if provided)
+    if (data.length && parseFloat(data.length) <= 0) {
+      errors.length = "Length must be greater than 0";
+    }
+    if (data.width && parseFloat(data.width) <= 0) {
+      errors.width = "Width must be greater than 0";
+    }
+    if (data.height && parseFloat(data.height) <= 0) {
+      errors.height = "Height must be greater than 0";
+    }
+
+    // Station validation
+    if (!data.sourceStation) {
+      errors.sourceStation = "Source station is required";
+    }
+    if (!data.destinationStation) {
+      errors.destinationStation = "Destination station is required";
+    }
+    if (data.sourceStation === data.destinationStation && data.sourceStation) {
+      errors.destinationStation =
+        "Destination station must be different from source station";
+    }
+
+    return errors;
+  };
+
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    setTouched((prev) => ({ ...prev, [name]: true }));
+
+    // Validate the field that was just blurred
+    const errors = validateForm(formData);
+    setFormErrors((prev) => ({ ...prev, [name]: errors[name] }));
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+
+    // If the field has been touched, validate it on change
+    if (touched[name]) {
+      const errors = validateForm({ ...formData, [name]: value });
+      setFormErrors((prev) => ({ ...prev, [name]: errors[name] }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+
+    // Validate all fields before submission
+    const errors = validateForm(formData);
+    setFormErrors(errors);
+    setTouched(
+      Object.keys(formData).reduce((acc, key) => ({ ...acc, [key]: true }), {})
+    );
+
+    if (Object.keys(errors).length > 0) {
+      setLoading(false);
+      return;
+    }
 
     try {
       const token = localStorage.getItem("token");
@@ -85,9 +174,9 @@ const ParcelManagement = () => {
         {
           ...formData,
           dimensions: {
-            length: parseFloat(formData.length),
-            width: parseFloat(formData.width),
-            height: parseFloat(formData.height),
+            length: parseFloat(formData.length) || 0,
+            width: parseFloat(formData.width) || 0,
+            height: parseFloat(formData.height) || 0,
           },
           weight: parseFloat(formData.weight),
         },
@@ -100,7 +189,7 @@ const ParcelManagement = () => {
       setShowTracking(true);
       fetchParcels();
 
-      // Clear form
+      // Clear form and validation states
       setFormData({
         customerName: "",
         customerPhone: "",
@@ -113,6 +202,8 @@ const ParcelManagement = () => {
         sourceStation: "",
         destinationStation: "",
       });
+      setFormErrors({});
+      setTouched({});
     } catch (error) {
       console.error("Error creating parcel:", error);
       alert(error.response?.data?.message || "Failed to create parcel");
@@ -226,34 +317,64 @@ const ParcelManagement = () => {
                 <label className="form-label">Customer Name</label>
                 <input
                   type="text"
-                  className="form-control"
+                  className={`form-control ${
+                    touched.customerName && formErrors.customerName
+                      ? "is-invalid"
+                      : ""
+                  }`}
                   name="customerName"
                   value={formData.customerName}
                   onChange={handleInputChange}
+                  onBlur={handleBlur}
                   required
                 />
+                {touched.customerName && formErrors.customerName && (
+                  <div className="invalid-feedback">
+                    {formErrors.customerName}
+                  </div>
+                )}
               </div>
               <div className="col-md-4 mb-3">
                 <label className="form-label">Phone Number</label>
                 <input
                   type="tel"
-                  className="form-control"
+                  className={`form-control ${
+                    touched.customerPhone && formErrors.customerPhone
+                      ? "is-invalid"
+                      : ""
+                  }`}
                   name="customerPhone"
                   value={formData.customerPhone}
                   onChange={handleInputChange}
+                  onBlur={handleBlur}
                   required
                 />
+                {touched.customerPhone && formErrors.customerPhone && (
+                  <div className="invalid-feedback">
+                    {formErrors.customerPhone}
+                  </div>
+                )}
               </div>
               <div className="col-md-4 mb-3">
                 <label className="form-label">Email</label>
                 <input
                   type="email"
-                  className="form-control"
+                  className={`form-control ${
+                    touched.customerEmail && formErrors.customerEmail
+                      ? "is-invalid"
+                      : ""
+                  }`}
                   name="customerEmail"
                   value={formData.customerEmail}
                   onChange={handleInputChange}
+                  onBlur={handleBlur}
                   required
                 />
+                {touched.customerEmail && formErrors.customerEmail && (
+                  <div className="invalid-feedback">
+                    {formErrors.customerEmail}
+                  </div>
+                )}
               </div>
 
               {/* Parcel Details */}
@@ -264,42 +385,74 @@ const ParcelManagement = () => {
                 <label className="form-label">Weight (kg)</label>
                 <input
                   type="number"
-                  className="form-control"
+                  className={`form-control ${
+                    touched.weight && formErrors.weight ? "is-invalid" : ""
+                  }`}
                   name="weight"
                   value={formData.weight}
                   onChange={handleInputChange}
+                  onBlur={handleBlur}
                   required
+                  step="0.01"
+                  min="0"
                 />
+                {touched.weight && formErrors.weight && (
+                  <div className="invalid-feedback">{formErrors.weight}</div>
+                )}
               </div>
               <div className="col-md-3 mb-3">
                 <label className="form-label">Length (cm)</label>
                 <input
                   type="number"
-                  className="form-control"
+                  className={`form-control ${
+                    touched.length && formErrors.length ? "is-invalid" : ""
+                  }`}
                   name="length"
                   value={formData.length}
                   onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  step="0.1"
+                  min="0"
                 />
+                {touched.length && formErrors.length && (
+                  <div className="invalid-feedback">{formErrors.length}</div>
+                )}
               </div>
               <div className="col-md-3 mb-3">
                 <label className="form-label">Width (cm)</label>
                 <input
                   type="number"
-                  className="form-control"
+                  className={`form-control ${
+                    touched.width && formErrors.width ? "is-invalid" : ""
+                  }`}
                   name="width"
                   value={formData.width}
                   onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  step="0.1"
+                  min="0"
                 />
+                {touched.width && formErrors.width && (
+                  <div className="invalid-feedback">{formErrors.width}</div>
+                )}
               </div>
               <div className="col-md-3 mb-3">
                 <label className="form-label">Height (cm)</label>
                 <input
                   type="number"
-                  className="form-control"
+                  className={`form-control ${
+                    touched.height && formErrors.height ? "is-invalid" : ""
+                  }`}
                   name="height"
                   value={formData.height}
                   onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  step="0.1"
+                  min="0"
                 />
+                {touched.height && formErrors.height && (
+                  <div className="invalid-feedback">{formErrors.height}</div>
+                )}
               </div>
 
               {/* Station Details */}
@@ -309,10 +462,15 @@ const ParcelManagement = () => {
               <div className="col-md-6 mb-3">
                 <label className="form-label">Source Station</label>
                 <select
-                  className="form-select"
+                  className={`form-select ${
+                    touched.sourceStation && formErrors.sourceStation
+                      ? "is-invalid"
+                      : ""
+                  }`}
                   name="sourceStation"
                   value={formData.sourceStation}
                   onChange={handleInputChange}
+                  onBlur={handleBlur}
                   required
                 >
                   <option value="">Select Source Station</option>
@@ -322,14 +480,24 @@ const ParcelManagement = () => {
                     </option>
                   ))}
                 </select>
+                {touched.sourceStation && formErrors.sourceStation && (
+                  <div className="invalid-feedback">
+                    {formErrors.sourceStation}
+                  </div>
+                )}
               </div>
               <div className="col-md-6 mb-3">
                 <label className="form-label">Destination Station</label>
                 <select
-                  className="form-select"
+                  className={`form-select ${
+                    touched.destinationStation && formErrors.destinationStation
+                      ? "is-invalid"
+                      : ""
+                  }`}
                   name="destinationStation"
                   value={formData.destinationStation}
                   onChange={handleInputChange}
+                  onBlur={handleBlur}
                   required
                 >
                   <option value="">Select Destination Station</option>
@@ -339,6 +507,12 @@ const ParcelManagement = () => {
                     </option>
                   ))}
                 </select>
+                {touched.destinationStation &&
+                  formErrors.destinationStation && (
+                    <div className="invalid-feedback">
+                      {formErrors.destinationStation}
+                    </div>
+                  )}
               </div>
 
               <div className="col-12 mb-3">
@@ -349,6 +523,7 @@ const ParcelManagement = () => {
                   rows="4"
                   value={formData.description}
                   onChange={handleInputChange}
+                  onBlur={handleBlur}
                 />
               </div>
 
@@ -356,7 +531,7 @@ const ParcelManagement = () => {
                 <button
                   type="submit"
                   className="btn btn-primary"
-                  disabled={loading}
+                  disabled={loading || Object.keys(formErrors).length > 0}
                 >
                   {loading ? "Processing..." : "Accept Parcel"}
                 </button>

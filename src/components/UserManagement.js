@@ -22,7 +22,7 @@ const UserManagement = () => {
     { value: "customerSupport", label: "Customer Support" },
     { value: "customerSupportStaff", label: "Customer Support Staff" },
     { value: "logisticOperator", label: "Logistic Operator" },
-    { value: "railwayAdmin", label: "Railway Admin" },
+    { value: "admin", label: "Railway Admin" },
   ];
 
   useEffect(() => {
