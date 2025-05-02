@@ -8,12 +8,12 @@ import { Train } from "./pages/Train/Train";
 import { GoodRetreve } from "./pages/GoodRetrever/GoodRetreve";
 import { Csupport } from "./pages/CustomerSupport/customerSupport";
 import { Complain } from "./pages/Complain/complain";
-import { NavBar } from "./pages/components/NavBar";
+import { NavBar } from "./pages/components/navbar";
 import { ErrorNotFound } from "./pages/components/ErrorNotFound";
 import { Package } from "./pages/Package/Package";
 import { CreateStation } from "./pages/TrainStation/CreateStaion";
-import { Whparcelsort } from "./pages/WarehouseLog/Whparcelsort"; 
-import { ReportsGeneration } from "./pages/WarehouseReports/ReportsGeneration"; 
+import Whparcelsort from './pages/Whparcelsort/Whparcelsort';
+import ReportsGeneration from './pages/ReportsGeneration/ReportsGeneration';
 
 function App() {
   return (
@@ -32,9 +32,9 @@ function App() {
             <Route path="/csupport" element={<Csupport />} />
             <Route path="/complains" element={<Complain />} />
             <Route path="/packages" element={<Package />} />
-            <Route path="*" element={<ErrorNotFound />} />
             <Route path="/Whparcelsort" element={<Whparcelsort />} />
             <Route path="/ReportsGeneration" element={<ReportsGeneration />} />
+            <Route path="*" element={<ErrorNotFound />} />
           </Routes>
         </div>
       </BrowserRouter>

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import './Whparcelsort.css';
 import axios from 'axios';
 
-
 const statusOptions = ['Pending', 'Dispatched', 'In Transit'];
 const sizeOptions = ['S', 'M', 'L'];
 const priorityOptions = ['Low', 'Medium', 'High'];
