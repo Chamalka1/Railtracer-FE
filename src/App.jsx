@@ -89,9 +89,9 @@ function App() {
           <Route
             path="/"
             element={
-              <ProtectedRoute>
+              <PublicLayout>
                 <Home />
-              </ProtectedRoute>
+              </PublicLayout>
             }
           />
           <Route
