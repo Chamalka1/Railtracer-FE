@@ -2,8 +2,10 @@ import React from "react";
 // import { Button } from '@/components/ui/button';
 import { ArrowRight } from "lucide-react";
 import heroImage from "../../Assets/firstslide.jpg";
+import { useNavigate } from "react-router-dom";
 
 const Hero = () => {
+    const navigate = useNavigate();
   return (
     <div className="bg-gradient-to-br from-white to-rail-50 relative overflow-hidden">
       <div className="absolute inset-0 bg-hero-pattern opacity-20"></div>
@@ -21,7 +23,7 @@ const Hero = () => {
               Get Started
               <ArrowRight className="ml-2 h-4 w-4" />
             </button> */}
-            <button size="lg" variant="outline" className="btn btn-primary">
+            <button onClick={()=>navigate('/track')} size="lg" variant="outline" className="btn btn-primary">
               Track Parcel
             </button>
           </div>

@@ -60,7 +60,7 @@ export const NavBar = () => {
 
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top shadow">
-      <div className="container">
+      {/* <div className="container">
         <Link className="navbar-brand fw-bold" to="/">
           <i className="bi bi-train-front me-2"></i>
           Railtracer
@@ -110,7 +110,7 @@ export const NavBar = () => {
             </div>
           )}
         </div>
-      </div>
+      </div> */}
     </nav>
   );
 };

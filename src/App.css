@@ -39,6 +39,49 @@
   }
 }
 
+/* Sidebar styles */
+.sidebar {
+  height: 100vh;
+  overflow-y: auto;
+  background: linear-gradient(180deg, #212529 0%, #343a40 100%);
+}
+
+.hover-highlight:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff !important;
+  transition: all 0.3s ease;
+}
+
+/* Main content adjustment with sidebar */
+.content-with-sidebar {
+  margin-left: 260px;
+  transition: margin 0.3s ease;
+}
+
+@media (max-width: 991.98px) {
+  .content-with-sidebar {
+    margin-left: 0;
+  }
+}
+
+/* Scrollbar styles for sidebar */
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
 /* Navbar styles */
 .navbar {
   background-color: #1a1a1a !important;
