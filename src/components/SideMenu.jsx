@@ -92,7 +92,7 @@ const SideMenu = () => {
           },
           {
             path: "/complains",
-            label: "Complaints",
+            label: "Manage Complaints",
             icon: <FileWarning size={20} />,
           }
         );

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import { FileWarning, Package, Search, MessageSquare } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
 export const Csupport = () => {
@@ -11,8 +12,10 @@ export const Csupport = () => {
     inTransit: 0,
     delivered: 0,
     accepted: 0,
+    openComplaints: 0,
   });
   const [recentParcels, setRecentParcels] = useState([]);
+  const [recentComplaints, setRecentComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,6 +32,73 @@ export const Csupport = () => {
         }),
       ]);
 
+      // Try to fetch complaints from API
+      let complaintsFromAPI = [];
+      try {
+        const complaintsResponse = await axios.get(
+          `${API_BASE_URL}/complaints?status=open&limit=3`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if (complaintsResponse.data && complaintsResponse.data.data) {
+          complaintsFromAPI = complaintsResponse.data.data;
+        }
+      } catch (apiError) {
+        console.log("Complaints API endpoint not available:", apiError);
+      }
+
+      // Check localStorage for any saved damage reports
+      const storedReports = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("damage_report_")) {
+          try {
+            const reportData = JSON.parse(localStorage.getItem(key));
+            if (reportData) {
+              storedReports.push({
+                ...reportData,
+                _id: key.replace("damage_report_", ""),
+                createdAt: new Date(
+                  parseInt(key.replace("damage_report_", ""))
+                ).toISOString(),
+              });
+            }
+          } catch (e) {
+            console.error("Error parsing stored damage report:", e);
+          }
+        }
+      }
+
+      // Combine API complaints with stored reports, or use mock data if both are empty
+      let allComplaints = [...complaintsFromAPI, ...storedReports];
+
+      if (allComplaints.length === 0) {
+        // Mock recent complaints if no real data is available
+        allComplaints = [
+          {
+            _id: "1",
+            customerName: "John Doe",
+            packageId: "PKG123456",
+            description: "Package arrived damaged with visible dents",
+            createdAt: new Date().toISOString(),
+            status: "open",
+            issueType: "damaged",
+          },
+          {
+            _id: "2",
+            customerName: "Jane Smith",
+            packageId: "PKG789012",
+            description: "Missing items from package",
+            createdAt: new Date(Date.now() - 86400000).toISOString(),
+            status: "open",
+            issueType: "missing-items",
+          },
+        ];
+      }
+
+      setRecentComplaints(allComplaints.slice(0, 3)); // Only show the 3 most recent
+
       // Calculate stats from parcels
       const parcels = parcelsResponse.data.data;
       const stats = parcels.reduce(
@@ -37,7 +107,13 @@ export const Csupport = () => {
           acc[parcel.status]++;
           return acc;
         },
-        { totalParcels: 0, "in-transit": 0, delivered: 0, accepted: 0 }
+        {
+          totalParcels: 0,
+          "in-transit": 0,
+          delivered: 0,
+          accepted: 0,
+          openComplaints: allComplaints.length,
+        }
       );
 
       setStats(stats);
@@ -55,6 +131,19 @@ export const Csupport = () => {
         return "bg-success";
       case "in-transit":
         return "bg-primary";
+      default:
+        return "bg-secondary";
+    }
+  };
+
+  const getIssueTypeBadgeClass = (issueType) => {
+    switch (issueType) {
+      case "damaged":
+        return "bg-danger";
+      case "missing-items":
+        return "bg-warning text-dark";
+      case "delay":
+        return "bg-info";
       default:
         return "bg-secondary";
     }
@@ -79,41 +168,44 @@ export const Csupport = () => {
       <div className="row mb-4">
         <div className="col">
           {/* <h2>Welcome, {user?.name || "Customer Support"}</h2> */}
-          <p className="text-muted">Here's your dashboard overview</p>
+          <h2 className="mb-2">Customer Support Dashboard</h2>
+          <p className="text-muted">
+            Monitor parcels and handle customer complaints
+          </p>
         </div>
       </div>
 
       {/* Stats Cards */}
       <div className="row mb-4">
-        <div className="col-md-3">
-          <div className="card bg-primary text-white">
+        <div className="col-md-3 mb-3 mb-md-0">
+          <div className="card bg-primary text-white h-100">
             <div className="card-body">
               <h5 className="card-title">Total Parcels</h5>
               <h2 className="mb-0">{stats.totalParcels}</h2>
             </div>
           </div>
         </div>
-        <div className="col-md-3">
-          <div className="card bg-info text-white">
+        <div className="col-md-3 mb-3 mb-md-0">
+          <div className="card bg-info text-white h-100">
             <div className="card-body">
               <h5 className="card-title">In Transit</h5>
               <h2 className="mb-0">{stats["in-transit"]}</h2>
             </div>
           </div>
         </div>
-        <div className="col-md-3">
-          <div className="card bg-success text-white">
+        <div className="col-md-3 mb-3 mb-md-0">
+          <div className="card bg-success text-white h-100">
             <div className="card-body">
               <h5 className="card-title">Delivered</h5>
               <h2 className="mb-0">{stats.delivered}</h2>
             </div>
           </div>
         </div>
-        <div className="col-md-3">
-          <div className="card bg-secondary text-white">
+        <div className="col-md-3 mb-3 mb-md-0">
+          <div className="card bg-danger text-white h-100">
             <div className="card-body">
-              <h5 className="card-title">Newly Accepted</h5>
-              <h2 className="mb-0">{stats.accepted}</h2>
+              <h5 className="card-title">Open Complaints</h5>
+              <h2 className="mb-0">{stats.openComplaints}</h2>
             </div>
           </div>
         </div>
@@ -122,21 +214,33 @@ export const Csupport = () => {
       {/* Quick Actions */}
       <div className="row mb-4">
         <div className="col-12">
-          <div className="card">
+          <div className="card shadow-sm">
             <div className="card-body">
               <h5 className="card-title mb-4">Quick Actions</h5>
-              <div className="d-flex gap-2">
+              <div className="d-flex flex-wrap gap-2">
                 <Link to="/packages" className="btn btn-primary">
-                  <i className="bi bi-box me-2"></i>
+                  <Package size={20} className="me-2" />
                   Manage Parcels
                 </Link>
-                <Link to="/complains" className="btn btn-outline-primary">
-                  <i className="bi bi-chat-dots me-2"></i>
-                  View Complaints
+                <Link to="/complains" className="btn btn-danger">
+                  <FileWarning size={20} className="me-2" />
+                  Manage Complaints
+                  {stats.openComplaints > 0 && (
+                    <span className="badge bg-white text-danger ms-2">
+                      {stats.openComplaints}
+                    </span>
+                  )}
                 </Link>
                 <Link to="/track" className="btn btn-outline-primary">
-                  <i className="bi bi-search me-2"></i>
+                  <Search size={20} className="me-2" />
                   Track Parcel
+                </Link>
+                <Link
+                  to="/csupport/messages"
+                  className="btn btn-outline-primary"
+                >
+                  <MessageSquare size={20} className="me-2" />
+                  Customer Messages
                 </Link>
               </div>
             </div>
@@ -144,14 +248,15 @@ export const Csupport = () => {
         </div>
       </div>
 
-      {/* Recent Parcels */}
+      {/* Two columns layout: Recent Parcels and Recent Complaints */}
       <div className="row">
-        <div className="col-12">
-          <div className="card">
+        {/* Recent Parcels */}
+        <div className="col-lg-7 mb-4 mb-lg-0">
+          <div className="card shadow-sm h-100">
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center mb-4">
                 <h5 className="card-title mb-0">Recent Parcels</h5>
-                <Link to="/packages" className="btn btn-sm btn-link">
+                <Link to="/packages" className="btn btn-sm btn-primary">
                   View All
                 </Link>
               </div>
@@ -187,6 +292,68 @@ export const Csupport = () => {
                   </tbody>
                 </table>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Complaints */}
+        <div className="col-lg-5">
+          <div className="card shadow-sm border-danger border-top h-100">
+            <div className="card-body">
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <h5 className="card-title mb-0">
+                  <FileWarning size={18} className="me-2 text-danger" />
+                  Recent Complaints
+                </h5>
+                <Link to="/complains" className="btn btn-sm btn-danger">
+                  Manage All
+                </Link>
+              </div>
+
+              {recentComplaints.length > 0 ? (
+                <div className="complaint-list">
+                  {recentComplaints.map((complaint) => (
+                    <div
+                      key={complaint._id}
+                      className="card mb-3 border-0 bg-light"
+                    >
+                      <div className="card-body p-3">
+                        <div className="d-flex justify-content-between mb-2">
+                          <h6 className="card-subtitle mb-0 text-body-secondary">
+                            {complaint.customerName}
+                          </h6>
+                          <span
+                            className={`badge ${getIssueTypeBadgeClass(
+                              complaint.issueType
+                            )}`}
+                          >
+                            {complaint.issueType.replace("-", " ")}
+                          </span>
+                        </div>
+                        <p className="card-text small mb-2 text-truncate">
+                          {complaint.description}
+                        </p>
+                        <div className="d-flex justify-content-between align-items-center">
+                          <small className="text-body-secondary">
+                            {new Date(complaint.createdAt).toLocaleDateString()}
+                          </small>
+                          <Link
+                            to={`/complains?id=${complaint._id}`}
+                            className="btn btn-sm btn-outline-danger"
+                          >
+                            Resolve
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="alert alert-success">
+                  <i className="bi bi-check-circle me-2"></i>
+                  No open complaints at the moment.
+                </div>
+              )}
             </div>
           </div>
         </div>
