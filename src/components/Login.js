@@ -35,6 +35,8 @@ const Login = () => {
         navigate("/admin");
       } else if(response.data.user.role==="customerSupport") {
         navigate("/csupport");
+      }else if("/warehouse"){
+        
       }
     } catch (error) {
       setError(error.response?.data?.message || "Login failed");

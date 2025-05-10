@@ -12,9 +12,10 @@ import { NavBar } from "./pages/components/NavBar";
 import { ErrorNotFound } from "./pages/components/ErrorNotFound";
 import { Package } from "./pages/Package/Package";
 import { CreateStation } from "./pages/TrainStation/CreateStaion";
-import UserManagement from "./components/UserManagement";
+import UserManagement from "./components/UserManagement.jsx";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 import ParcelManagement from "./components/ParcelManagement";
+import SetPassword from "./components/SetPassword";
 
 // Protected Route component
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
@@ -34,7 +35,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
 function App() {
   const user = JSON.parse(localStorage.getItem("user") || "null");
-  console.log(user)
+  console.log(user);
   return (
     <div className="App">
       <BrowserRouter>
@@ -43,6 +44,7 @@ function App() {
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
+            <Route path="/set-password/:token" element={<SetPassword />} />
 
             {/* Protected Routes */}
             <Route
