@@ -1,6 +1,20 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FileWarning, CheckCircle, PlusCircle, X } from "lucide-react";
+import * as pdfMake from "pdfmake/build/pdfmake";
+
+// Configure pdfMake
+pdfMake.vfs = {};
+pdfMake.fonts = {
+  Roboto: {
+    normal:
+      "https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf",
+    bold: "https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Medium.ttf",
+    italics:
+      "https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Italic.ttf",
+    bolditalics:
+      "https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-MediumItalic.ttf",
+  },
+};
 
 export const Complain = () => {
   const API_BASE_URL = "http://localhost:5000/api/v1";
@@ -25,6 +39,16 @@ export const Complain = () => {
   });
   const [resolution, setResolution] = useState("");
   const [activeTab, setActiveTab] = useState("open");
+
+  // Report generation states
+  const [reportType, setReportType] = useState("pdf");
+  const [reportDateRange, setReportDateRange] = useState({
+    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0], // 30 days ago
+    endDate: new Date().toISOString().split("T")[0], // today
+  });
+  const [generatingReport, setGeneratingReport] = useState(false);
 
   // Fetch complaints from API
   const fetchComplaints = async () => {
@@ -223,6 +247,256 @@ export const Complain = () => {
     setShowResolveModal(true);
   };
 
+  // Report generation functions
+  const handleReportInputChange = (e) => {
+    const { name, value } = e.target;
+    setReportDateRange((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const generateCSV = (data) => {
+    // Define CSV headers
+    const headers = [
+      "ID",
+      "Customer Name",
+      "Package ID",
+      "Issue Type",
+      "Description",
+      "Status",
+      "Created Date",
+      "Resolved Date",
+      "Resolution",
+      "Contact Email",
+      "Contact Phone",
+    ].join(",");
+
+    // Convert complaint data to CSV rows
+    const rows = data.map((complaint) =>
+      [
+        complaint._id,
+        `"${complaint.customerName.replace(/"/g, '""')}"`,
+        complaint.packageId,
+        complaint.issueType,
+        `"${complaint.description.replace(/"/g, '""')}"`,
+        complaint.status,
+        new Date(complaint.createdAt).toLocaleDateString(),
+        complaint.resolvedAt
+          ? new Date(complaint.resolvedAt).toLocaleDateString()
+          : "",
+        complaint.resolution
+          ? `"${complaint.resolution.replace(/"/g, '""')}"`
+          : "",
+        complaint.contactEmail || "",
+        complaint.contactPhone || "",
+      ].join(",")
+    );
+
+    // Combine headers and rows
+    return [headers, ...rows].join("\n");
+  };
+
+  const downloadCSV = (csvData, filename) => {
+    const blob = new Blob([csvData], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const generatePDF = (data) => {
+    const title = `Complaints Report (${new Date(
+      reportDateRange.startDate
+    ).toLocaleDateString()} - ${new Date(
+      reportDateRange.endDate
+    ).toLocaleDateString()})`;
+
+    // Generate table data
+    const tableBody = [
+      [
+        { text: "ID", style: "tableHeader" },
+        { text: "Customer Name", style: "tableHeader" },
+        { text: "Package ID", style: "tableHeader" },
+        { text: "Issue Type", style: "tableHeader" },
+        { text: "Status", style: "tableHeader" },
+        { text: "Date", style: "tableHeader" },
+      ],
+    ];
+
+    data.forEach((complaint) => {
+      tableBody.push([
+        complaint._id.substring(0, 8),
+        complaint.customerName,
+        complaint.packageId,
+        complaint.issueType.replace("-", " "),
+        complaint.status,
+        new Date(complaint.createdAt).toLocaleDateString(),
+      ]);
+    });
+
+    // Create content for the detail section
+    const detailsContent = [{ text: "Complaint Details", style: "subheader" }];
+
+    data.forEach((complaint, index) => {
+      detailsContent.push(
+        {
+          text: `${index + 1}. ${
+            complaint.customerName
+          } (ID: ${complaint._id.substring(0, 8)})`,
+          style: "detailHeader",
+        },
+        {
+          text: `Issue: ${complaint.issueType.replace("-", " ")}`,
+          margin: [0, 5, 0, 0],
+        },
+        { text: `Description: ${complaint.description}`, margin: [0, 5, 0, 0] },
+        complaint.resolution
+          ? {
+              text: `Resolution: ${complaint.resolution}`,
+              margin: [0, 5, 0, 10],
+            }
+          : { text: "Status: Unresolved", margin: [0, 5, 0, 10] }
+      );
+    });
+
+    const docDefinition = {
+      content: [
+        { text: "RailTracer Railway Management System", style: "companyName" },
+        { text: title, style: "header" },
+        {
+          text: `Status: ${
+            activeTab === "open" ? "Open" : "Resolved"
+          } Complaints`,
+          style: "subheader",
+        },
+        {
+          text: `Total Complaints: ${data.length}`,
+          style: "subheader",
+          margin: [0, 0, 0, 10],
+        },
+        {
+          style: "table",
+          table: {
+            headerRows: 1,
+            widths: ["auto", "*", "auto", "auto", "auto", "auto"],
+            body: tableBody,
+          },
+          layout: {
+            hLineWidth: function (i, node) {
+              return 1;
+            },
+            vLineWidth: function (i, node) {
+              return 1;
+            },
+            hLineColor: function (i, node) {
+              return "#dddddd";
+            },
+            vLineColor: function (i, node) {
+              return "#dddddd";
+            },
+          },
+        },
+        {
+          text: "Generated on: " + new Date().toLocaleString(),
+          style: "footer",
+        },
+        { text: "", pageBreak: "before" },
+        ...detailsContent,
+      ],
+      styles: {
+        companyName: {
+          fontSize: 16,
+          bold: true,
+          color: "#0d6efd",
+          margin: [0, 0, 0, 5],
+        },
+        header: {
+          fontSize: 18,
+          bold: true,
+          margin: [0, 0, 0, 10],
+        },
+        subheader: {
+          fontSize: 14,
+          bold: true,
+          margin: [0, 5, 0, 5],
+        },
+        tableHeader: {
+          bold: true,
+          fontSize: 12,
+          color: "#212529",
+          fillColor: "#f8f9fa",
+        },
+        table: {
+          margin: [0, 5, 0, 15],
+        },
+        footer: {
+          fontSize: 10,
+          italics: true,
+          margin: [0, 10, 0, 0],
+        },
+        detailHeader: {
+          fontSize: 13,
+          bold: true,
+          margin: [0, 10, 0, 5],
+        },
+      },
+      defaultStyle: {
+        fontSize: 10,
+      },
+    };
+
+    pdfMake
+      .createPdf(docDefinition)
+      .download(
+        `complaints-report-${reportDateRange.startDate}-to-${reportDateRange.endDate}.pdf`
+      );
+  };
+
+  const handleGenerateReport = () => {
+    setGeneratingReport(true);
+
+    try {
+      // Filter complaints by date range
+      const filteredComplaints = complaints.filter((complaint) => {
+        const complaintDate = new Date(complaint.createdAt);
+        const startDate = new Date(reportDateRange.startDate);
+        const endDate = new Date(reportDateRange.endDate);
+        endDate.setHours(23, 59, 59, 999); // Include the end date fully
+
+        return complaintDate >= startDate && complaintDate <= endDate;
+      });
+
+      if (filteredComplaints.length === 0) {
+        showNotification(
+          "No complaints found in the selected date range",
+          "warning"
+        );
+        setGeneratingReport(false);
+        return;
+      }
+
+      if (reportType === "csv") {
+        const csvData = generateCSV(filteredComplaints);
+        const filename = `complaints_report_${reportDateRange.startDate}_to_${reportDateRange.endDate}.csv`;
+        downloadCSV(csvData, filename);
+        showNotification("CSV report downloaded successfully", "success");
+      } else if (reportType === "pdf") {
+        generatePDF(filteredComplaints);
+        showNotification("PDF report downloaded successfully", "success");
+      }
+    } catch (err) {
+      console.error("Error generating report:", err);
+      showNotification("Failed to generate report", "danger");
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
+
   useEffect(() => {
     fetchComplaints();
   }, [activeTab]);
@@ -231,16 +505,26 @@ export const Complain = () => {
     <div className="container-fluid">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3 className="mb-0">
-          <FileWarning className="me-2" size={24} />
+          <i className="bi bi-file-earmark-text me-2"></i>
           Complaints Management
         </h3>
-        <button
-          className="btn btn-primary d-flex align-items-center"
-          onClick={() => setShowCreateModal(true)}
-        >
-          <PlusCircle size={18} className="me-2" />
-          New Complaint
-        </button>
+        <div className="d-flex gap-2">
+          <button
+            className="btn btn-outline-primary d-flex align-items-center"
+            onClick={handleGenerateReport}
+            disabled={generatingReport}
+          >
+            <i className="bi bi-download me-2"></i>
+            Generate Report
+          </button>
+          <button
+            className="btn btn-primary d-flex align-items-center"
+            onClick={() => setShowCreateModal(true)}
+          >
+            <i className="bi bi-plus-circle me-2"></i>
+            New Complaint
+          </button>
+        </div>
       </div>
 
       {notification.show && (
@@ -257,6 +541,73 @@ export const Complain = () => {
         </div>
       )}
 
+      {/* Report Generation Card */}
+      <div className="card mb-4">
+        <div className="card-body">
+          <h5 className="card-title">Generate Complaints Report</h5>
+          <div className="row g-3">
+            <div className="col-md-3">
+              <label className="form-label">Report Format</label>
+              <select
+                className="form-select"
+                value={reportType}
+                onChange={(e) => setReportType(e.target.value)}
+              >
+                <option value="pdf">PDF Report</option>
+                <option value="csv">CSV Export</option>
+              </select>
+            </div>
+            <div className="col-md-3">
+              <label className="form-label">Start Date</label>
+              <input
+                type="date"
+                className="form-control"
+                name="startDate"
+                value={reportDateRange.startDate}
+                onChange={handleReportInputChange}
+                max={reportDateRange.endDate}
+              />
+            </div>
+            <div className="col-md-3">
+              <label className="form-label">End Date</label>
+              <input
+                type="date"
+                className="form-control"
+                name="endDate"
+                value={reportDateRange.endDate}
+                onChange={handleReportInputChange}
+                min={reportDateRange.startDate}
+                max={new Date().toISOString().split("T")[0]}
+              />
+            </div>
+            <div className="col-md-3">
+              <label className="form-label">&nbsp;</label>
+              <button
+                className="btn btn-primary d-block w-100"
+                onClick={handleGenerateReport}
+                disabled={generatingReport}
+              >
+                {generatingReport ? (
+                  <>
+                    <span
+                      className="spinner-border spinner-border-sm me-2"
+                      role="status"
+                      aria-hidden="true"
+                    ></span>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <i className="bi bi-download me-2"></i>
+                    Download Report
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="card shadow-sm">
         <div className="card-header bg-white pb-0">
           <ul className="nav nav-tabs card-header-tabs">
@@ -265,7 +616,7 @@ export const Complain = () => {
                 className={`nav-link ${activeTab === "open" ? "active" : ""}`}
                 onClick={() => setActiveTab("open")}
               >
-                <FileWarning size={16} className="me-2" />
+                <i className="bi bi-exclamation-triangle me-2"></i>
                 Open Complaints
               </button>
             </li>
@@ -276,7 +627,7 @@ export const Complain = () => {
                 }`}
                 onClick={() => setActiveTab("resolved")}
               >
-                <CheckCircle size={16} className="me-2" />
+                <i className="bi bi-check-circle me-2"></i>
                 Resolved Complaints
               </button>
             </li>

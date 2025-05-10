@@ -70,11 +70,11 @@ const SideMenu = () => {
           //   label: "Manage Packages",
           //   icon: <Package size={20} />,
           // },
-          {
-            path: "/good-retrevals",
-            label: "Good Retrievals",
-            icon: <Package size={20} />,
-          }
+          // {
+          //   path: "/good-retrevals",
+          //   label: "Good Retrievals",
+          //   icon: <Package size={20} />,
+          // }
         );
         break;
       case "customerSupport":
