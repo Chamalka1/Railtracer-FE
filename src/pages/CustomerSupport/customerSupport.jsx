@@ -36,13 +36,50 @@ export const Csupport = () => {
       let complaintsFromAPI = [];
       try {
         const complaintsResponse = await axios.get(
-          `${API_BASE_URL}/complaints?status=open&limit=3`,
+          `${API_BASE_URL}/complains?complainStatus=SUMBITTED,IN_PROGRESS,PAUSED&limit=3`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        if (complaintsResponse.data && complaintsResponse.data.data) {
-          complaintsFromAPI = complaintsResponse.data.data;
+        if (complaintsResponse.data && complaintsResponse.data.response) {
+          // Map the backend complaint structure to our frontend format
+          complaintsFromAPI = await Promise.all(
+            complaintsResponse.data.response.map(async (complaint) => {
+              // Try to get the parcel details to display the tracking number
+              let trackingNumber = "Unknown";
+              try {
+                if (complaint.packageId) {
+                  const parcelResponse = await axios.get(
+                    `${API_BASE_URL}/parcels/${complaint.packageId}`,
+                    {
+                      headers: { Authorization: `Bearer ${token}` },
+                    }
+                  );
+
+                  if (parcelResponse.data && parcelResponse.data.data) {
+                    trackingNumber =
+                      parcelResponse.data.data.trackingNumber || "Unknown";
+                  }
+                }
+              } catch (parcelError) {
+                console.warn("Could not fetch parcel details:", parcelError);
+              }
+
+              // Convert backend format to frontend format
+              return {
+                _id: complaint._id,
+                customerName: complaint.user?.name || "Unknown Customer",
+                packageId: trackingNumber,
+                description: complaint.discription || "",
+                issueType: complaint.complainerCategory
+                  ? complaint.complainerCategory.toLowerCase()
+                  : "other",
+                status:
+                  complaint.complainStatus === "SOLVED" ? "resolved" : "open",
+                createdAt: complaint.createdAt || new Date().toISOString(),
+              };
+            })
+          );
         }
       } catch (apiError) {
         console.log("Complaints API endpoint not available:", apiError);

@@ -24,6 +24,7 @@ export const Complain = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showResolveModal, setShowResolveModal] = useState(false);
   const [selectedComplaint, setSelectedComplaint] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
   const [notification, setNotification] = useState({
     show: false,
     message: "",
@@ -54,105 +55,85 @@ export const Complain = () => {
   const fetchComplaints = async () => {
     try {
       setLoading(true);
+      setError(null);
       const token = localStorage.getItem("token");
-      const status = activeTab === "open" ? "open" : "resolved";
-
-      // Try to fetch from the API, but have a fallback for the mock data
-      try {
-        const response = await axios.get(
-          `${API_BASE_URL}/complaints?status=${status}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        // If we get valid data from the API, use it
-        if (response.data && response.data.data) {
-          setComplaints(response.data.data);
-          return;
-        }
-      } catch (apiError) {
-        console.log("API endpoint not available, using mock data", apiError);
-        // Continue with the mock data below
+      if (!token) {
+        throw new Error("Authentication token not found");
       }
 
-      // Mock data as fallback (will be used if the API fails or returns invalid data)
-      console.log("Using mock complaint data");
-      const mockData =
-        activeTab === "open"
-          ? [
-              {
-                _id: "1",
-                customerName: "John Doe",
-                packageId: "PKG123456",
-                description: "Package arrived damaged with visible dents",
-                createdAt: new Date().toISOString(),
-                status: "open",
-                issueType: "damaged",
-                contactEmail: "john@example.com",
-                contactPhone: "555-1234",
-              },
-              {
-                _id: "2",
-                customerName: "Jane Smith",
-                packageId: "PKG789012",
-                description:
-                  "Package is missing items that were supposed to be included",
-                createdAt: new Date(Date.now() - 86400000).toISOString(),
-                status: "open",
-                issueType: "missing-items",
-                contactEmail: "jane@example.com",
-                contactPhone: "555-5678",
-              },
-              {
-                _id: "3",
-                customerName: "Mike Johnson",
-                packageId: "PKG345678",
-                description:
-                  "Package damaged during warehouse handling - reported by staff",
-                createdAt: new Date(Date.now() - 43200000).toISOString(),
-                status: "open",
-                issueType: "damaged",
-                reportedBy: "Warehouse Staff",
-                contactEmail: "mike@example.com",
-                contactPhone: "555-9012",
-              },
-            ]
-          : [
-              {
-                _id: "4",
-                customerName: "Sarah Williams",
-                packageId: "PKG901234",
-                description: "Package arrived late",
-                createdAt: new Date(Date.now() - 172800000).toISOString(),
-                resolvedAt: new Date(Date.now() - 86400000).toISOString(),
-                status: "resolved",
-                issueType: "delay",
-                resolution:
-                  "Customer was compensated with a discount on their next shipment.",
-                contactEmail: "sarah@example.com",
-                contactPhone: "555-3456",
-              },
-              {
-                _id: "5",
-                customerName: "David Brown",
-                packageId: "PKG567890",
-                description: "Wrong items received in package",
-                createdAt: new Date(Date.now() - 259200000).toISOString(),
-                resolvedAt: new Date(Date.now() - 172800000).toISOString(),
-                status: "resolved",
-                issueType: "other",
-                resolution:
-                  "Correct items sent to customer with express shipping.",
-                contactEmail: "david@example.com",
-                contactPhone: "555-7890",
-              },
-            ];
+      // Status mapping from frontend to backend
+      const complainStatus =
+        activeTab === "open" ? "SUMBITTED,IN_PROGRESS,PAUSED" : "SOLVED";
 
-      setComplaints(mockData);
+      // Fetch complaints from the API with proper pagination and status filter
+      const response = await axios.get(
+        `${API_BASE_URL}/complains?complainStatus=${complainStatus}&limit=100`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      // Process the response data
+      if (response.data && response.data.response) {
+        // The backend returns data in a different format, so we need to convert it
+        const formattedComplaints = await Promise.all(
+          response.data.response.map(async (complaint) => {
+            // Try to get the parcel details to display the tracking number
+            let trackingNumber = "Unknown";
+            try {
+              if (complaint.packageId) {
+                const parcelResponse = await axios.get(
+                  `${API_BASE_URL}/parcels/${complaint.packageId}`,
+                  {
+                    headers: { Authorization: `Bearer ${token}` },
+                  }
+                );
+
+                if (parcelResponse.data && parcelResponse.data.data) {
+                  trackingNumber =
+                    parcelResponse.data.data.trackingNumber || "Unknown";
+                }
+              }
+            } catch (parcelError) {
+              console.warn("Could not fetch parcel details:", parcelError);
+            }
+
+            // Convert backend format to frontend format
+            return {
+              _id: complaint._id,
+              customerName: complaint.user?.name || "Unknown Customer",
+              packageId: trackingNumber,
+              description: complaint.discription || "",
+              issueType: complaint.complainerCategory
+                ? complaint.complainerCategory.toLowerCase()
+                : "other",
+              status:
+                complaint.complainStatus === "SOLVED" ? "resolved" : "open",
+              contactEmail: complaint.user?.email || "",
+              contactPhone: complaint.user?.phonNumber || "",
+              createdAt: complaint.createdAt || new Date().toISOString(),
+              resolvedAt:
+                complaint.complainStatus === "SOLVED"
+                  ? complaint.updatedAt
+                  : null,
+              resolution:
+                complaint.logs && complaint.logs.length > 0
+                  ? complaint.logs[complaint.logs.length - 1].description
+                  : "",
+            };
+          })
+        );
+
+        setComplaints(formattedComplaints);
+      } else {
+        // Handle empty or invalid response
+        setComplaints([]);
+        console.warn("API returned empty or invalid data", response);
+      }
     } catch (err) {
       console.error("Error fetching complaints:", err);
       setError("Failed to load complaints. Please try again.");
+      setComplaints([]);
     } finally {
       setLoading(false);
     }
@@ -163,27 +144,98 @@ export const Complain = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Authentication token not found");
+      }
 
-      // In production, replace with actual API call:
-      // await axios.post(`${API_BASE_URL}/complaints`, formData, {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
+      setLoading(true);
 
-      // Mock successful creation
-      const newComplaint = {
-        ...formData,
-        _id: Date.now().toString(),
-        createdAt: new Date().toISOString(),
-        status: "open",
+      // First, search for the parcel by tracking number to get its ObjectId
+      let parcelObjectId;
+      try {
+        const parcelResponse = await axios.get(
+          `${API_BASE_URL}/parcels?trackingNumber=${formData.packageId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        if (
+          parcelResponse.data &&
+          parcelResponse.data.data &&
+          parcelResponse.data.data.length > 0
+        ) {
+          parcelObjectId = parcelResponse.data.data[0]._id;
+        } else {
+          throw new Error("Parcel not found with the provided tracking number");
+        }
+      } catch (parcelError) {
+        console.error("Error finding parcel:", parcelError);
+        showNotification(
+          "Could not find a parcel with the provided tracking number. Please verify and try again.",
+          "danger"
+        );
+        setLoading(false);
+        return;
+      }
+
+      // Format data according to the backend's expected structure
+      const complainData = {
+        user: {
+          name: formData.customerName,
+          email: formData.contactEmail,
+          phonNumber: formData.contactPhone,
+        },
+        packageId: parcelObjectId,
+        complainerCategory: formData.issueType.toUpperCase(),
+        discription: formData.description,
+        complainStatus: "SUMBITTED",
       };
 
-      setComplaints([newComplaint, ...complaints]);
-      showNotification("Complaint created successfully", "success");
+      // Perform the actual API call to create a complaint
+      const response = await axios.post(
+        `${API_BASE_URL}/complains`,
+        complainData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      // If the API call was successful, add the new complaint to the list
+      if (response.data && response.data.response) {
+        // Add the new complaint to the existing list and convert backend format to frontend format
+        const newComplaint = {
+          _id: response.data.response._id,
+          customerName: formData.customerName,
+          packageId: formData.packageId,
+          description: formData.description,
+          issueType: formData.issueType,
+          status: "open",
+          contactEmail: formData.contactEmail,
+          contactPhone: formData.contactPhone,
+          createdAt: new Date().toISOString(),
+        };
+
+        setComplaints([newComplaint, ...complaints]);
+        showNotification("Complaint created successfully", "success");
+      } else {
+        showNotification(
+          "Created complaint but received unexpected response format",
+          "warning"
+        );
+      }
+
+      // Close the modal and reset the form
       setShowCreateModal(false);
       resetForm();
     } catch (err) {
       console.error("Error creating complaint:", err);
-      showNotification("Failed to create complaint", "danger");
+      showNotification(
+        err.response?.data?.error?.message || "Failed to create complaint",
+        "danger"
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -192,18 +244,39 @@ export const Complain = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Authentication token not found");
+      }
 
-      // In production, replace with actual API call:
-      // await axios.put(`${API_BASE_URL}/complaints/${selectedComplaint._id}/resolve`,
-      //   { resolution },
-      //   { headers: { Authorization: `Bearer ${token}` }}
-      // );
+      setActionLoading(true);
 
-      // Mock successful resolution
-      const updatedComplaints = complaints.filter(
-        (c) => c._id !== selectedComplaint._id
-      );
-      setComplaints(updatedComplaints);
+      // Format the update data according to backend's expected structure
+      const updateData = {
+        id: selectedComplaint._id,
+        complainStatus: "SOLVED",
+        logs: [
+          {
+            date: new Date(),
+            description: resolution,
+          },
+        ],
+      };
+
+      // Perform the actual API call to resolve a complaint
+      await axios.put(`${API_BASE_URL}/complains`, updateData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      // Remove the resolved complaint from the list of open complaints
+      // or refetch the complaints if we're viewing resolved complaints
+      if (activeTab === "open") {
+        setComplaints(
+          complaints.filter((c) => c._id !== selectedComplaint._id)
+        );
+      } else {
+        // Refetch complaints to get the updated list with the newly resolved complaint
+        fetchComplaints();
+      }
 
       showNotification("Complaint resolved successfully", "success");
       setShowResolveModal(false);
@@ -211,7 +284,12 @@ export const Complain = () => {
       setResolution("");
     } catch (err) {
       console.error("Error resolving complaint:", err);
-      showNotification("Failed to resolve complaint", "danger");
+      showNotification(
+        err.response?.data?.error?.message || "Failed to resolve complaint",
+        "danger"
+      );
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -272,26 +350,65 @@ export const Complain = () => {
       "Contact Phone",
     ].join(",");
 
+    // Safely access properties with null/undefined checks
+    const safeGetString = (obj, path, defaultVal = "") => {
+      if (!obj) return defaultVal;
+      const parts = path.split(".");
+      let current = obj;
+      for (const part of parts) {
+        if (current[part] === undefined || current[part] === null) {
+          return defaultVal;
+        }
+        current = current[part];
+      }
+      return current.toString().replace(/"/g, '""');
+    };
+
+    const safeGetDate = (obj, prop) => {
+      if (!obj || !obj[prop]) return "";
+      try {
+        return new Date(obj[prop]).toLocaleDateString();
+      } catch (err) {
+        return "";
+      }
+    };
+
     // Convert complaint data to CSV rows
-    const rows = data.map((complaint) =>
-      [
-        complaint._id,
-        `"${complaint.customerName.replace(/"/g, '""')}"`,
-        complaint.packageId,
-        complaint.issueType,
-        `"${complaint.description.replace(/"/g, '""')}"`,
-        complaint.status,
-        new Date(complaint.createdAt).toLocaleDateString(),
-        complaint.resolvedAt
-          ? new Date(complaint.resolvedAt).toLocaleDateString()
-          : "",
-        complaint.resolution
-          ? `"${complaint.resolution.replace(/"/g, '""')}"`
-          : "",
-        complaint.contactEmail || "",
-        complaint.contactPhone || "",
-      ].join(",")
-    );
+    const rows = data.map((complaint) => {
+      try {
+        return [
+          safeGetString(complaint, "_id"),
+          `"${safeGetString(complaint, "customerName")}"`,
+          safeGetString(complaint, "packageId"),
+          safeGetString(complaint, "issueType"),
+          `"${safeGetString(complaint, "description")}"`,
+          safeGetString(complaint, "status"),
+          safeGetDate(complaint, "createdAt"),
+          safeGetDate(complaint, "resolvedAt"),
+          complaint.resolution
+            ? `"${safeGetString(complaint, "resolution")}"`
+            : "",
+          safeGetString(complaint, "contactEmail"),
+          safeGetString(complaint, "contactPhone"),
+        ].join(",");
+      } catch (error) {
+        console.error("Error processing complaint for CSV:", error, complaint);
+        // Return a row with minimal info if there was an error
+        return [
+          safeGetString(complaint, "_id", "Error"),
+          `"Error processing complaint data"`,
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+        ].join(",");
+      }
+    });
 
     // Combine headers and rows
     return [headers, ...rows].join("\n");
@@ -316,11 +433,47 @@ export const Complain = () => {
       reportDateRange.endDate
     ).toLocaleDateString()})`;
 
+    // Safely access properties with null/undefined checks
+    const safeGetString = (obj, path, defaultVal = "") => {
+      if (!obj) return defaultVal;
+      const parts = path.split(".");
+      let current = obj;
+      for (const part of parts) {
+        if (current[part] === undefined || current[part] === null) {
+          return defaultVal;
+        }
+        current = current[part];
+      }
+      return current.toString();
+    };
+
+    const safeGetDate = (obj, prop) => {
+      if (!obj || !obj[prop]) return "N/A";
+      try {
+        return new Date(obj[prop]).toLocaleDateString();
+      } catch (err) {
+        return "Invalid date";
+      }
+    };
+
+    // Group complaints by status for summary
+    const complaintsStatus = {
+      open: 0,
+      resolved: 0,
+      total: data.length,
+    };
+
+    data.forEach((complaint) => {
+      const status = safeGetString(complaint, "status", "unknown");
+      if (status === "open") complaintsStatus.open++;
+      else if (status === "resolved") complaintsStatus.resolved++;
+    });
+
     // Generate table data
     const tableBody = [
       [
         { text: "ID", style: "tableHeader" },
-        { text: "Customer Name", style: "tableHeader" },
+        { text: "Customer", style: "tableHeader" },
         { text: "Package ID", style: "tableHeader" },
         { text: "Issue Type", style: "tableHeader" },
         { text: "Status", style: "tableHeader" },
@@ -329,56 +482,120 @@ export const Complain = () => {
     ];
 
     data.forEach((complaint) => {
-      tableBody.push([
-        complaint._id.substring(0, 8),
-        complaint.customerName,
-        complaint.packageId,
-        complaint.issueType.replace("-", " "),
-        complaint.status,
-        new Date(complaint.createdAt).toLocaleDateString(),
-      ]);
+      try {
+        const id = safeGetString(complaint, "_id", "N/A");
+        tableBody.push([
+          id.substring(0, 8),
+          safeGetString(complaint, "customerName", "N/A"),
+          safeGetString(complaint, "packageId", "N/A"),
+          safeGetString(complaint, "issueType", "other").replace("-", " "),
+          safeGetString(complaint, "status", "unknown"),
+          safeGetDate(complaint, "createdAt"),
+        ]);
+      } catch (error) {
+        console.error("Error adding complaint to PDF table:", error);
+        tableBody.push(["Error", "Error processing row", "", "", "", ""]);
+      }
     });
 
     // Create content for the detail section
     const detailsContent = [{ text: "Complaint Details", style: "subheader" }];
 
     data.forEach((complaint, index) => {
-      detailsContent.push(
-        {
-          text: `${index + 1}. ${
-            complaint.customerName
-          } (ID: ${complaint._id.substring(0, 8)})`,
-          style: "detailHeader",
-        },
-        {
-          text: `Issue: ${complaint.issueType.replace("-", " ")}`,
-          margin: [0, 5, 0, 0],
-        },
-        { text: `Description: ${complaint.description}`, margin: [0, 5, 0, 0] },
-        complaint.resolution
-          ? {
-              text: `Resolution: ${complaint.resolution}`,
-              margin: [0, 5, 0, 10],
-            }
-          : { text: "Status: Unresolved", margin: [0, 5, 0, 10] }
-      );
+      try {
+        detailsContent.push(
+          {
+            text: `${index + 1}. ${safeGetString(
+              complaint,
+              "customerName",
+              "Unknown Customer"
+            )} (ID: ${safeGetString(complaint, "_id", "N/A").substring(0, 8)})`,
+            style: "detailHeader",
+          },
+          {
+            text: `Issue: ${safeGetString(
+              complaint,
+              "issueType",
+              "other"
+            ).replace("-", " ")}`,
+            margin: [0, 5, 0, 0],
+          },
+          {
+            text: `Description: ${safeGetString(
+              complaint,
+              "description",
+              "No description provided"
+            )}`,
+            margin: [0, 5, 0, 0],
+          },
+          safeGetString(complaint, "resolution")
+            ? {
+                text: `Resolution: ${safeGetString(complaint, "resolution")}`,
+                margin: [0, 5, 0, 10],
+              }
+            : {
+                text: "Status: Unresolved",
+                margin: [0, 5, 0, 10],
+              }
+        );
+      } catch (error) {
+        console.error("Error processing complaint for PDF details:", error);
+        // Add a simplified entry if there was an error
+        detailsContent.push(
+          {
+            text: `${index + 1}. Error processing complaint details`,
+            style: "detailHeader",
+            color: "red",
+          },
+          {
+            text: `ID: ${safeGetString(complaint, "_id", "N/A").substring(
+              0,
+              8
+            )}`,
+            margin: [0, 5, 0, 10],
+          }
+        );
+      }
     });
+
+    // Create status summary content
+    const summaryTable = {
+      style: "summaryTable",
+      table: {
+        widths: ["*", "auto"],
+        body: [
+          [
+            { text: "Status", style: "tableHeader" },
+            { text: "Count", style: "tableHeader" },
+          ],
+          ["Open Complaints", complaintsStatus.open.toString()],
+          ["Resolved Complaints", complaintsStatus.resolved.toString()],
+          ["Total Complaints", complaintsStatus.total.toString()],
+        ],
+      },
+      layout: {
+        hLineWidth: function (i, node) {
+          return 1;
+        },
+        vLineWidth: function (i, node) {
+          return 1;
+        },
+        hLineColor: function (i, node) {
+          return "#dddddd";
+        },
+        vLineColor: function (i, node) {
+          return "#dddddd";
+        },
+      },
+    };
 
     const docDefinition = {
       content: [
         { text: "RailTracer Railway Management System", style: "companyName" },
         { text: title, style: "header" },
-        {
-          text: `Status: ${
-            activeTab === "open" ? "Open" : "Resolved"
-          } Complaints`,
-          style: "subheader",
-        },
-        {
-          text: `Total Complaints: ${data.length}`,
-          style: "subheader",
-          margin: [0, 0, 0, 10],
-        },
+        { text: "Complaints Summary", style: "subheader" },
+        summaryTable,
+        { text: "Complaints List", style: "subheader", margin: [0, 15, 0, 5] },
         {
           style: "table",
           table: {
@@ -434,6 +651,10 @@ export const Complain = () => {
         table: {
           margin: [0, 5, 0, 15],
         },
+        summaryTable: {
+          margin: [0, 5, 0, 15],
+          width: "50%",
+        },
         footer: {
           fontSize: 10,
           italics: true,
@@ -457,21 +678,126 @@ export const Complain = () => {
       );
   };
 
-  const handleGenerateReport = () => {
+  // Function to fetch complaints for report generation
+  const fetchComplaintsForReport = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Authentication token not found");
+      }
+
+      // Create date filters for the API query
+      // Note: Backend may not support date range filtering, so we'll handle filtering in the frontend
+
+      // Fetch complaints with different statuses
+      const openResponse = await axios.get(
+        `${API_BASE_URL}/complains?complainStatus=SUMBITTED,IN_PROGRESS,PAUSED`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const resolvedResponse = await axios.get(
+        `${API_BASE_URL}/complains?complainStatus=SOLVED`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      // Process and combine the responses
+      let allComplaints = [];
+
+      if (openResponse.data && openResponse.data.response) {
+        allComplaints = [...allComplaints, ...openResponse.data.response];
+      }
+
+      if (resolvedResponse.data && resolvedResponse.data.response) {
+        allComplaints = [...allComplaints, ...resolvedResponse.data.response];
+      }
+
+      // Convert backend format to frontend format and filter by date range
+      const startDate = new Date(reportDateRange.startDate);
+      const endDate = new Date(reportDateRange.endDate);
+      endDate.setHours(23, 59, 59, 999); // Include the entire end date
+
+      // Format and filter the complaints
+      const formattedComplaints = await Promise.all(
+        allComplaints
+          .filter((complaint) => {
+            const createdAt = new Date(complaint.createdAt);
+            return createdAt >= startDate && createdAt <= endDate;
+          })
+          .map(async (complaint) => {
+            // Try to get the parcel details to display the tracking number
+            let trackingNumber = "Unknown";
+            try {
+              if (complaint.packageId) {
+                const parcelResponse = await axios.get(
+                  `${API_BASE_URL}/parcels/${complaint.packageId}`,
+                  {
+                    headers: { Authorization: `Bearer ${token}` },
+                  }
+                );
+
+                if (parcelResponse.data && parcelResponse.data.data) {
+                  trackingNumber =
+                    parcelResponse.data.data.trackingNumber || "Unknown";
+                }
+              }
+            } catch (parcelError) {
+              console.warn(
+                "Could not fetch parcel details for report:",
+                parcelError
+              );
+            }
+
+            // Convert backend format to frontend format
+            return {
+              _id: complaint._id,
+              customerName: complaint.user?.name || "Unknown Customer",
+              packageId: trackingNumber,
+              description: complaint.discription || "",
+              issueType: complaint.complainerCategory
+                ? complaint.complainerCategory.toLowerCase()
+                : "other",
+              status:
+                complaint.complainStatus === "SOLVED" ? "resolved" : "open",
+              contactEmail: complaint.user?.email || "",
+              contactPhone: complaint.user?.phonNumber || "",
+              createdAt: complaint.createdAt || new Date().toISOString(),
+              resolvedAt:
+                complaint.complainStatus === "SOLVED"
+                  ? complaint.updatedAt
+                  : null,
+              resolution:
+                complaint.logs && complaint.logs.length > 0
+                  ? complaint.logs[complaint.logs.length - 1].description
+                  : "",
+            };
+          })
+      );
+
+      // Sort complaints by creation date (newest first)
+      formattedComplaints.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+
+      return formattedComplaints;
+    } catch (error) {
+      console.error("Error fetching complaints for report:", error);
+      showNotification("Failed to fetch complaint data from API", "danger");
+      throw error;
+    }
+  };
+
+  const handleGenerateReport = async () => {
     setGeneratingReport(true);
 
     try {
-      // Filter complaints by date range
-      const filteredComplaints = complaints.filter((complaint) => {
-        const complaintDate = new Date(complaint.createdAt);
-        const startDate = new Date(reportDateRange.startDate);
-        const endDate = new Date(reportDateRange.endDate);
-        endDate.setHours(23, 59, 59, 999); // Include the end date fully
+      // Fetch complaints data for report instead of filtering the current state
+      const complaintsData = await fetchComplaintsForReport();
 
-        return complaintDate >= startDate && complaintDate <= endDate;
-      });
-
-      if (filteredComplaints.length === 0) {
+      if (complaintsData.length === 0) {
         showNotification(
           "No complaints found in the selected date range",
           "warning"
@@ -481,12 +807,12 @@ export const Complain = () => {
       }
 
       if (reportType === "csv") {
-        const csvData = generateCSV(filteredComplaints);
+        const csvData = generateCSV(complaintsData);
         const filename = `complaints_report_${reportDateRange.startDate}_to_${reportDateRange.endDate}.csv`;
         downloadCSV(csvData, filename);
         showNotification("CSV report downloaded successfully", "success");
       } else if (reportType === "pdf") {
-        generatePDF(filteredComplaints);
+        generatePDF(complaintsData);
         showNotification("PDF report downloaded successfully", "success");
       }
     } catch (err) {

@@ -100,24 +100,59 @@ const ReachedDestinationParcels = () => {
       const token = localStorage.getItem("token");
       const user = JSON.parse(localStorage.getItem("user") || "null");
 
+      // First, get the ObjectId for the parcel
+      let parcelObjectId;
+      try {
+        const parcelResponse = await axios.get(
+          `http://localhost:5000/api/v1/parcels?trackingNumber=${selectedParcel.trackingNumber}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        if (
+          parcelResponse.data &&
+          parcelResponse.data.data &&
+          parcelResponse.data.data.length > 0
+        ) {
+          parcelObjectId = parcelResponse.data.data[0]._id;
+        } else {
+          throw new Error("Parcel not found with the provided tracking number");
+        }
+      } catch (parcelError) {
+        console.error("Error finding parcel:", parcelError);
+        throw new Error(
+          `Could not find parcel with tracking number ${selectedParcel.trackingNumber}`
+        );
+      }
+
       // Prepare the damage report to be submitted as a complaint
       const damageReport = {
-        customerName: selectedParcel.customerName,
-        packageId: selectedParcel.trackingNumber,
-        description: damageDescription,
-        issueType: "damaged",
-        reportedBy: `${user?.firstName || "Warehouse"} ${
-          user?.lastName || "Staff"
-        }`,
-        reporterRole: user?.role || "warehouse",
-        status: "open",
+        user: {
+          name: selectedParcel.customerName,
+          // No email or phone available in this context, but backend expects them
+          email: "unknown@example.com",
+          phonNumber: "0000000000",
+        },
+        packageId: parcelObjectId,
+        complainerCategory: "DAMAGE",
+        discription: damageDescription,
+        complainStatus: "SUMBITTED",
+        logs: [
+          {
+            date: new Date(),
+            description: `Damage reported by warehouse staff: ${
+              user?.firstName || "Warehouse"
+            } ${user?.lastName || "Staff"}`,
+          },
+        ],
       };
 
       // Try to send to the real API endpoint
       let apiSuccess = false;
       try {
         await axios.post(
-          `http://localhost:5000/api/v1/complaints`,
+          `http://localhost:5000/api/v1/complains`,
           damageReport,
           {
             headers: { Authorization: `Bearer ${token}` },
@@ -132,7 +167,14 @@ const ReachedDestinationParcels = () => {
         // or save it to localStorage to retry when the API is available
         localStorage.setItem(
           `damage_report_${Date.now()}`,
-          JSON.stringify(damageReport)
+          JSON.stringify({
+            customerName: selectedParcel.customerName,
+            packageId: selectedParcel.trackingNumber,
+            description: damageDescription,
+            issueType: "damaged",
+            status: "open",
+            createdAt: new Date().toISOString(),
+          })
         );
       }
 
@@ -148,7 +190,9 @@ const ReachedDestinationParcels = () => {
     } catch (err) {
       console.error("Error reporting damaged parcel:", err);
       showNotification(
-        err.response?.data?.error || "Failed to report damaged parcel",
+        err.response?.data?.error?.message ||
+          err.message ||
+          "Failed to report damaged parcel",
         "danger"
       );
     } finally {
