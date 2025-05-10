@@ -16,6 +16,7 @@ const UserManagement = () => {
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [validationErrors, setValidationErrors] = useState({});
   const [editingUser, setEditingUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
@@ -35,13 +36,61 @@ const UserManagement = () => {
     }
   };
 
+  // Validation functions
+  const validateName = (name, fieldName) => {
+    if (!name) return `${fieldName} is required`;
+    if (/\d/.test(name)) return `${fieldName} should not contain numbers`;
+    return null;
+  };
+
+  const validateEmail = (email) => {
+    if (!email) return "Email is required";
+    // RFC 5322 compliant email regex
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) return "Please enter a valid email address";
+    return null;
+  };
+
+  const validateContactNumber = (number) => {
+    if (!number) return "Contact number is required";
+    if (!/^\d{10}$/.test(number)) return "Contact number must be exactly 10 digits";
+    return null;
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    // Validate first name
+    const firstNameError = validateName(formData.firstName, "First name");
+    if (firstNameError) newErrors.firstName = firstNameError;
+    
+    // Validate last name
+    const lastNameError = validateName(formData.lastName, "Last name");
+    if (lastNameError) newErrors.lastName = lastNameError;
+    
+    // Validate email
+    const emailError = validateEmail(formData.email);
+    if (emailError) newErrors.email = emailError;
+    
+    // Validate contact number
+    const contactNumberError = validateContactNumber(formData.contactNumber);
+    if (contactNumberError) newErrors.contactNumber = contactNumberError;
+    
+    // Validate role
+    if (!formData.role) newErrors.role = "Role is required";
+    
+    setValidationErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
-    // Clear error for this field when user starts typing
+    
+    // Clear server error for this field when user starts typing
     if (errors[name]) {
       setErrors((prev) => {
         const newErrors = { ...prev };
@@ -49,10 +98,39 @@ const UserManagement = () => {
         return newErrors;
       });
     }
+    
+    // Do field-level validation as user types
+    if (name === "firstName") {
+      const error = validateName(value, "First name");
+      setValidationErrors(prev => ({ ...prev, firstName: error }));
+    } else if (name === "lastName") {
+      const error = validateName(value, "Last name");
+      setValidationErrors(prev => ({ ...prev, lastName: error }));
+    } else if (name === "email") {
+      const error = validateEmail(value);
+      setValidationErrors(prev => ({ ...prev, email: error }));
+    } else if (name === "contactNumber") {
+      const error = validateContactNumber(value);
+      setValidationErrors(prev => ({ ...prev, contactNumber: error }));
+    } else if (name === "role" && !value) {
+      setValidationErrors(prev => ({ ...prev, role: "Role is required" }));
+    } else if (name === "role" && value) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.role;
+        return newErrors;
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate form before submission
+    if (!validateForm()) {
+      return; // Stop form submission if validation fails
+    }
+    
     setLoading(true);
     setErrors({});
 
@@ -79,6 +157,7 @@ const UserManagement = () => {
       });
       setEditingUser(null);
       setShowModal(false);
+      setValidationErrors({});
       fetchUsers();
 
       // Show success message
@@ -98,9 +177,9 @@ const UserManagement = () => {
 
   const handleError = (error) => {
     if (error.response?.data) {
-      const { message, errors: validationErrors } = error.response.data;
-      if (validationErrors) {
-        setErrors(validationErrors);
+      const { message, errors: serverErrors } = error.response.data;
+      if (serverErrors) {
+        setErrors(serverErrors);
       } else if (message) {
         setErrors({ general: message });
       }
@@ -121,6 +200,7 @@ const UserManagement = () => {
       department: user.department || "",
     });
     setErrors({});
+    setValidationErrors({});
     setShowModal(true);
   };
 
@@ -156,6 +236,7 @@ const UserManagement = () => {
               department: "",
             });
             setErrors({});
+            setValidationErrors({});
             setShowModal(true);
           }}
         >
@@ -191,15 +272,15 @@ const UserManagement = () => {
                     <input
                       type="text"
                       className={`form-control ${
-                        errors.firstName ? "is-invalid" : ""
+                        errors.firstName || validationErrors.firstName ? "is-invalid" : ""
                       }`}
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleInputChange}
                       required
                     />
-                    {errors.firstName && (
-                      <div className="invalid-feedback">{errors.firstName}</div>
+                    {(errors.firstName || validationErrors.firstName) && (
+                      <div className="invalid-feedback">{errors.firstName || validationErrors.firstName}</div>
                     )}
                   </div>
 
@@ -208,15 +289,15 @@ const UserManagement = () => {
                     <input
                       type="text"
                       className={`form-control ${
-                        errors.lastName ? "is-invalid" : ""
+                        errors.lastName || validationErrors.lastName ? "is-invalid" : ""
                       }`}
                       name="lastName"
                       value={formData.lastName}
                       onChange={handleInputChange}
                       required
                     />
-                    {errors.lastName && (
-                      <div className="invalid-feedback">{errors.lastName}</div>
+                    {(errors.lastName || validationErrors.lastName) && (
+                      <div className="invalid-feedback">{errors.lastName || validationErrors.lastName}</div>
                     )}
                   </div>
 
@@ -225,15 +306,15 @@ const UserManagement = () => {
                     <input
                       type="email"
                       className={`form-control ${
-                        errors.email ? "is-invalid" : ""
+                        errors.email || validationErrors.email ? "is-invalid" : ""
                       }`}
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
                       required
                     />
-                    {errors.email && (
-                      <div className="invalid-feedback">{errors.email}</div>
+                    {(errors.email || validationErrors.email) && (
+                      <div className="invalid-feedback">{errors.email || validationErrors.email}</div>
                     )}
                     {!editingUser && (
                       <div className="form-text">
@@ -247,7 +328,7 @@ const UserManagement = () => {
                     <label className="form-label">Role</label>
                     <select
                       className={`form-select ${
-                        errors.role ? "is-invalid" : ""
+                        errors.role || validationErrors.role ? "is-invalid" : ""
                       }`}
                       name="role"
                       value={formData.role}
@@ -262,8 +343,8 @@ const UserManagement = () => {
                         Logistic Operator
                       </option>
                     </select>
-                    {errors.role && (
-                      <div className="invalid-feedback">{errors.role}</div>
+                    {(errors.role || validationErrors.role) && (
+                      <div className="invalid-feedback">{errors.role || validationErrors.role}</div>
                     )}
                   </div>
 
@@ -272,16 +353,16 @@ const UserManagement = () => {
                     <input
                       type="tel"
                       className={`form-control ${
-                        errors.contactNumber ? "is-invalid" : ""
+                        errors.contactNumber || validationErrors.contactNumber ? "is-invalid" : ""
                       }`}
                       name="contactNumber"
                       value={formData.contactNumber}
                       onChange={handleInputChange}
                       required
                     />
-                    {errors.contactNumber && (
+                    {(errors.contactNumber || validationErrors.contactNumber) && (
                       <div className="invalid-feedback">
-                        {errors.contactNumber}
+                        {errors.contactNumber || validationErrors.contactNumber}
                       </div>
                     )}
                   </div>
