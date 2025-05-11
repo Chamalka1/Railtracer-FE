@@ -134,7 +134,17 @@ const ParcelManagement = () => {
 
     // Validate the field that was just blurred
     const errors = validateForm(formData);
-    setFormErrors((prev) => ({ ...prev, [name]: errors[name] }));
+
+    // Update formErrors state properly - if there's no error, remove the field from formErrors
+    setFormErrors((prev) => {
+      const newErrors = { ...prev };
+      if (errors[name]) {
+        newErrors[name] = errors[name];
+      } else {
+        delete newErrors[name];
+      }
+      return newErrors;
+    });
   };
 
   const handleInputChange = (e) => {
@@ -146,8 +156,20 @@ const ParcelManagement = () => {
 
     // If the field has been touched, validate it on change
     if (touched[name]) {
-      const errors = validateForm({ ...formData, [name]: value });
-      setFormErrors((prev) => ({ ...prev, [name]: errors[name] }));
+      // Only validate this specific field by creating a temporary formData object
+      const tempFormData = { ...formData, [name]: value };
+      const errors = validateForm(tempFormData);
+
+      // Update formErrors state properly - if there's no error, remove the field from formErrors
+      setFormErrors((prev) => {
+        const newErrors = { ...prev };
+        if (errors[name]) {
+          newErrors[name] = errors[name];
+        } else {
+          delete newErrors[name];
+        }
+        return newErrors;
+      });
     }
   };
 
@@ -157,7 +179,11 @@ const ParcelManagement = () => {
 
     // Validate all fields before submission
     const errors = validateForm(formData);
+    console.log(errors)
+    // Set errors directly instead of merging with previous state
     setFormErrors(errors);
+
+    // Mark all fields as touched
     setTouched(
       Object.keys(formData).reduce((acc, key) => ({ ...acc, [key]: true }), {})
     );
